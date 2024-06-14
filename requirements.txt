@@ -1,0 +1,12 @@
+asgiref==3.8.1
+channels==4.1.0
+click==8.1.7
+Django==5.0.6
+djangorestframework==3.15.1
+joblib==1.4.2
+nltk==3.8.1
+pillow==10.3.0
+regex==2024.5.15
+sqlparse==0.5.0
+textblob==0.18.0.post0
+tqdm==4.66.4
