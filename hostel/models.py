@@ -10,6 +10,8 @@ class Hostel(models.Model):
         return self.name
 
 
+from django.db import models
+
 class Room(models.Model):
     ROOM_TYPES = (
         ("bedsitter", "Bedsitter"),
@@ -20,11 +22,13 @@ class Room(models.Model):
 
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="rooms")
     number = models.IntegerField()
-    room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="Bedsitter")
+    room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
 
     def __str__(self):
-        return f"Room {self.number} ({self.get_type_display()}) in {self.hostel.name}"
+        return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
+
+
 
 
 class Tenant(models.Model):
