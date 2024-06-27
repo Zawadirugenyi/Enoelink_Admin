@@ -37,8 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'hostel', 
     'rest_framework',
+    'rest_framework.authtoken',
+    #my apps
+    'hostel', 
+    "users",
     
 ]
 
@@ -53,6 +56,16 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'smart_hostel_pro.urls'
+
+AUTH_USER_MODEL = "users.User" 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication'
+    ),
+}
+
 
 TEMPLATES = [
     {
@@ -108,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
