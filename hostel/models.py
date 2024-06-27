@@ -29,11 +29,10 @@ class Room(models.Model):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
 
 
-
-
 class Tenant(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255, default='default_password')
     phone_number = models.CharField(max_length=20)
 
     def __str__(self):
