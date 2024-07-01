@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
     #my apps
     'hostel', 
     "users",
-    
 ]
 
 MIDDLEWARE = [
@@ -53,11 +54,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
+
 
 ROOT_URLCONF = 'smart_hostel_pro.urls'
 
 AUTH_USER_MODEL = "users.User" 
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -131,11 +135,64 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Smart Hostel Pro Admin",  # Title of the window
+    "site_header": "Smart Hostel Pro",  # Title on the login screen and brand
+    "site_brand": "Smart Hostel Pro",  # Title on the brand
+    "site_logo": "smart_hostel_pro/img/logo.png",  # Logo for the brand on top left
+    "login_logo": None,  # Logo for the login form (defaults to site_logo)
+    "login_logo_dark": None,  # Logo for login form in dark themes (defaults to login_logo)
+    "site_logo_classes": "img-circle",  # CSS classes applied to the logo
+    "site_icon": None,  # Favicon for your site (defaults to site_logo)
+    "welcome_sign": "Welcome to Smart Hostel Pro",  # Welcome text on the login screen
+    "copyright": "Smart Hostel Pro",  # Copyright on the footer
+    "search_model": ["auth.User", "auth.Group"],  # List of model admins to search from
+    "user_avatar": None,  # Field name on user model for avatar
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
+        {"model": "auth.User"},
+        {"app": "books"},
+    ],
+    "usermenu_links": [
+        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
+        {"model": "auth.user"}
+    ],
+    "show_sidebar": True,  # Whether to display the side menu
+    "navigation_expanded": True,  # Whether to auto expand the menu
+    "hide_apps": [],  # Hide these apps when generating side menu
+    "hide_models": [],  # Hide these models when generating side menu
+    "order_with_respect_to": ["auth", "books", "books.author", "books.book"],  # Order of apps/models in side menu
+    "custom_links": {
+        "books": [{
+            "name": "Make Messages", 
+            "url": "make_messages", 
+            "icon": "fas fa-comments",
+            "permissions": ["books.view_book"]
+        }]
+    },
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",  # Default icon for parent items
+    "default_icon_children": "fas fa-circle",  # Default icon for child items
+    "related_modal_active": False,  # Use modals instead of popups
+    "custom_css": None,  # Relative path to custom CSS
+    "custom_js": None,  # Relative path to custom JS
+    "use_google_fonts_cdn": True,  # Whether to link font from Google Fonts
+    "changeform_format": "horizontal_tabs",  # Format for change view
+    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},  # Change form overrides
+    "language_chooser": True,  # Add a language dropdown into the admin
+   
+}
 
