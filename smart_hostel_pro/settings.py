@@ -11,13 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if'
@@ -27,9 +24,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -41,9 +36,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    #my apps
     'hostel', 
-    "users",
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -57,11 +51,9 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
 ]
 
-
 ROOT_URLCONF = 'smart_hostel_pro.urls'
 
 AUTH_USER_MODEL = "users.User" 
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -69,7 +61,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication'
     ),
 }
-
 
 TEMPLATES = [
     {
@@ -89,10 +80,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smart_hostel_pro.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -100,10 +89,8 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -119,80 +106,76 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Africa/Nairobi'
-
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-
 STATIC_URL = '/static/'
+
+# Define the directory where collectstatic will gather static files for deployment
+STATIC_ROOT = BASE_DIR / 'static_root/'
+
+# Define additional directories for static files if needed
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 JAZZMIN_SETTINGS = {
-    "site_title": "Smart Hostel Pro Admin",  # Title of the window
-    "site_header": "Smart Hostel Pro",  # Title on the login screen and brand
-    "site_brand": "Smart Hostel Pro",  # Title on the brand
-    "site_logo": "smart_hostel_pro/img/logo.png",  # Logo for the brand on top left
-    "login_logo": None,  # Logo for the login form (defaults to site_logo)
-    "login_logo_dark": None,  # Logo for login form in dark themes (defaults to login_logo)
-    "site_logo_classes": "img-circle",  # CSS classes applied to the logo
-    "site_icon": None,  # Favicon for your site (defaults to site_logo)
-    "welcome_sign": "Welcome to Smart Hostel Pro",  # Welcome text on the login screen
-    "copyright": "Smart Hostel Pro",  # Copyright on the footer
-    "search_model": ["auth.User", "auth.Group"],  # List of model admins to search from
-    "user_avatar": None,  # Field name on user model for avatar
-    "topmenu_links": [
-        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
-        {"model": "auth.User"},
-        {"app": "books"},
-    ],
-    "usermenu_links": [
-        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
-        {"model": "auth.user"}
-    ],
-    "show_sidebar": True,  # Whether to display the side menu
-    "navigation_expanded": True,  # Whether to auto expand the menu
-    "hide_apps": [],  # Hide these apps when generating side menu
-    "hide_models": [],  # Hide these models when generating side menu
-    "order_with_respect_to": ["auth", "books", "books.author", "books.book"],  # Order of apps/models in side menu
-    "custom_links": {
-        "books": [{
-            "name": "Make Messages", 
-            "url": "make_messages", 
-            "icon": "fas fa-comments",
-            "permissions": ["books.view_book"]
-        }]
-    },
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-    },
-    "default_icon_parents": "fas fa-chevron-circle-right",  # Default icon for parent items
-    "default_icon_children": "fas fa-circle",  # Default icon for child items
-    "related_modal_active": False,  # Use modals instead of popups
-    "custom_css": None,  # Relative path to custom CSS
-    "custom_js": None,  # Relative path to custom JS
-    "use_google_fonts_cdn": True,  # Whether to link font from Google Fonts
-    "changeform_format": "horizontal_tabs",  # Format for change view
-    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},  # Change form overrides
-    "language_chooser": True,  # Add a language dropdown into the admin
+    "site_title": "Smart Hostel Pro Admin",
+    "site_header": "Smart Hostel Pro",
+    "site_brand": "Smart Hostel Pro",
+    "site_logo": "smart_hostel_pro",
+    
+    "site_logo_classes": "img-circle",
+    "site_icon": None,
+    "welcome_sign": "Welcome to Smart Hostel Pro",
+    "copyright": "Smart Hostel Pro",
+    "language_chooser": True,
    
+    
 }
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": True,
+    "footer_small_text": True,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-info",
+    "accent": "accent-info",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-light-info",
+    "sidebar_nav_small_text": True,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": True,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-outline-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    },
+    "actions_sticky_top": False
+}
+
 
