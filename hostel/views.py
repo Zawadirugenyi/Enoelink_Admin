@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from .models import Hostel, Room, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
 from .serializers import (
     HostelSerializer, RoomSerializer, TenantSerializer, StaffSerializer, 
@@ -9,6 +11,31 @@ from .serializers import (
     PaymentSerializer, NotificationSerializer
 )
 from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly, IsTenantOrReadOnly
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.http import JsonResponse
+
+def send_notification(message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        'notifications',
+        {
+            'type': 'notification_message',
+            'message': message
+        }
+    )
+
+def admin_send_notification(request):
+    # Your logic to send notification
+    send_notification("Admin sent a notification")
+    return JsonResponse({'status': 'Notification sent'})
+
+def user_request_requisition(request):
+    # Your logic for user requisition
+    send_notification("User requested a requisition")
+    return JsonResponse({'status': 'Requisition requested'})
+
 
 class HostelListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
@@ -60,7 +87,6 @@ class HostelDetailView(APIView):
         hostel.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Similarly, you can convert the other ViewSets:
 class RoomListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     serializer_class = RoomSerializer
@@ -111,7 +137,6 @@ class RoomDetailView(APIView):
         room.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Continue with the same pattern for Tenant, Staff, Booking, Maintenance, Facility, Payment, and Notification
 class TenantListCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TenantSerializer
@@ -162,7 +187,6 @@ class TenantDetailView(APIView):
         tenant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Staff Views
 class StaffListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StaffSerializer
@@ -213,7 +237,6 @@ class StaffDetailView(APIView):
         staff.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Booking Views
 class BookingListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     serializer_class = BookingSerializer
@@ -264,7 +287,6 @@ class BookingDetailView(APIView):
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Maintenance Views
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly, IsTenantOrReadOnly]
     serializer_class = MaintenanceSerializer
@@ -315,7 +337,6 @@ class MaintenanceDetailView(APIView):
         maintenance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Facility Views
 class FacilityListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     serializer_class = FacilitySerializer
@@ -366,7 +387,6 @@ class FacilityDetailView(APIView):
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Payment Views
 class PaymentListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     serializer_class = PaymentSerializer
@@ -417,7 +437,6 @@ class PaymentDetailView(APIView):
         payment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Notification Views
 class NotificationListCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
@@ -467,3 +486,22 @@ class NotificationDetailView(APIView):
             return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
         notification.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+
+# Define signals for automatic notifications
+@receiver(post_save, sender=Booking)
+def create_booking_notification(sender, instance, created, **kwargs):
+    if created:
+        Notification.objects.create(
+            user=instance.user,
+            message=f"Booking created: {instance.room.name} from {instance.start_date} to {instance.end_date}"
+        )
+
+@receiver(post_save, sender=Maintenance)
+def create_maintenance_notification(sender, instance, created, **kwargs):
+    if created:
+        Notification.objects.create(
+            user=instance.reported_by,
+            message=f"Maintenance request created: {instance.description}"
+        )

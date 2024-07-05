@@ -1,6 +1,9 @@
 
 from rest_framework.authtoken.views import obtain_auth_token
 from django.urls import path
+from . import views
+
+from django.urls import path
 from .views import (
     HostelListCreateView, HostelDetailView,
     RoomListCreateView, RoomDetailView,
@@ -15,6 +18,8 @@ from .views import (
 
 urlpatterns = [
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('admin/send_notification/', views.admin_send_notification, name='admin_send_notification'),
+    path('user/request_requisition/', views.user_request_requisition, name='user_request_requisition'),
     path('hostels/', HostelListCreateView.as_view(), name='hostel-list-create'),
     path('hostels/<int:pk>/', HostelDetailView.as_view(), name='hostel-detail'),
     path('rooms/', RoomListCreateView.as_view(), name='room-list-create'),

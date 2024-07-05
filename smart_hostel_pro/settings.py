@@ -38,7 +38,18 @@ INSTALLED_APPS = [
     'corsheaders',
     'hostel', 
     'users',
+    'channels',
 ]
+
+
+ASGI_APPLICATION = 'your_project_name.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
