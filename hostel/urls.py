@@ -1,4 +1,5 @@
-
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
 from django.urls import path
 from . import views
@@ -38,4 +39,8 @@ urlpatterns = [
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+
