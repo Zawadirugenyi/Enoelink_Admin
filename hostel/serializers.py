@@ -8,9 +8,11 @@ class HostelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RoomSerializer(serializers.ModelSerializer):
+    hostel_name = serializers.CharField(source='hostel.name', read_only=True)
+
     class Meta:
         model = Room
-        fields = '__all__'
+        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name']
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
