@@ -7,12 +7,15 @@ class HostelSerializer(serializers.ModelSerializer):
         model = Hostel
         fields = '__all__'
 
+from rest_framework import serializers
+from .models import Room
+
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
 
     class Meta:
         model = Room
-        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name']
+        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name', 'description']
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:

@@ -21,6 +21,7 @@ class Room(models.Model):
     number = models.IntegerField()
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
+    description = models.TextField(max_length=200)  # Added description field
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
