@@ -9,6 +9,7 @@ from .models import (
     Facility,
     Payment,
     Notification,
+    RoomDescription,
 )
 
 
@@ -58,3 +59,10 @@ class PaymentAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ("message", "date")
     search_fields = ("message",)
+
+@admin.register(RoomDescription)
+class RoomDescriptionAdmin(admin.ModelAdmin):
+    list_display = ("room", "price") 
+
+    
+  

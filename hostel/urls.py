@@ -17,6 +17,7 @@ from .views import (
 )
 
 urlpatterns = [
+    
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('admin/send_notification/', admin_send_notification, name='admin_send_notification'),
     path('user/request_requisition/', user_request_requisition, name='user_request_requisition'),

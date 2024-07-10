@@ -44,7 +44,6 @@ INSTALLED_APPS = [
 
 ]
 
-
 ASGI_APPLICATION = 'your_project_name.asgi.application'
 
 CHANNEL_LAYERS = {
@@ -52,7 +51,6 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
-
 
 
 
@@ -81,6 +79,8 @@ CORS_ALLOW_HEADERS = [
 ROOT_URLCONF = 'smart_hostel_pro.urls'
 
 AUTH_USER_MODEL = "users.User" 
+
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -146,6 +146,10 @@ TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
+
+# settings.py
+DEBUG = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
