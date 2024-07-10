@@ -1,17 +1,21 @@
-# hostel/serializers.py
+# serializers.py
+
 from rest_framework import serializers
-from .models import Hostel, Room, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
+from .models import Hostel, Room, RoomDescription, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
 
 class HostelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hostel
         fields = '__all__'
 
-from rest_framework import serializers
-from .models import Room
+class RoomDescriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoomDescription
+        fields = '__all__'
 
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
+    description = RoomDescriptionSerializer(source='details', read_only=True)
 
     class Meta:
         model = Room

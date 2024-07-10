@@ -1,3 +1,5 @@
+# models.py
+
 from django.db import models
 
 class Hostel(models.Model):
@@ -7,7 +9,6 @@ class Hostel(models.Model):
 
     def __str__(self):
         return self.name
-
 
 class Room(models.Model):
     ROOM_TYPES = (
@@ -21,11 +22,21 @@ class Room(models.Model):
     number = models.IntegerField()
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
-    description = models.TextField(max_length=200)  # Added description field
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
 
+class RoomDescription(models.Model):
+    room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name="description")
+    sitting_room_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    bedroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    kitchen_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    bathroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    description = models.TextField(max_length=2000) 
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f'Description for Room {self.room.number}'
 
 class Tenant(models.Model):
     name = models.CharField(max_length=255)
@@ -36,7 +47,6 @@ class Tenant(models.Model):
     def __str__(self):
         return self.name
 
-
 class Staff(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="staff")
     name = models.CharField(max_length=255)
@@ -44,7 +54,6 @@ class Staff(models.Model):
 
     def __str__(self):
         return f"{self.name}, ({self.position})"
-
 
 class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
@@ -55,7 +64,6 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.tenant.name} booking for Room {self.room.number}"
 
-
 class Maintenance(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="maintenance")
     description = models.TextField()
@@ -63,7 +71,6 @@ class Maintenance(models.Model):
 
     def __str__(self):
         return f'Maintenance for Room {self.room.number} - {"Completed" if self.completed else "Pending"}'
-
 
 class Facility(models.Model):
     hostel = models.ForeignKey(
@@ -76,7 +83,6 @@ class Facility(models.Model):
     def __str__(self):
         return f"{self.name} at {self.hostel.name}"
 
-
 class Payment(models.Model):
     tenant = models.ForeignKey(
         Tenant, on_delete=models.CASCADE, related_name="payments"
@@ -86,7 +92,6 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment of {self.amount} by {self.tenant.name} on {self.date}"
-
 
 class Notification(models.Model):
     tenant = models.ForeignKey(

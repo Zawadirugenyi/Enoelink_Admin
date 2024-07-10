@@ -1,10 +1,7 @@
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
-from django.urls import path
-from . import views
-
-from django.urls import path
 from .views import (
     HostelListCreateView, HostelDetailView,
     RoomListCreateView, RoomDetailView,
@@ -14,13 +11,15 @@ from .views import (
     MaintenanceListCreateView, MaintenanceDetailView,
     FacilityListCreateView, FacilityDetailView,
     PaymentListCreateView, PaymentDetailView,
-    NotificationListCreateView, NotificationDetailView
+    NotificationListCreateView, NotificationDetailView,
+    admin_send_notification, user_request_requisition,
+    RoomDescriptionDetailView, RoomDescriptionListCreateView,  # Add RoomDescriptionListCreateView
 )
 
 urlpatterns = [
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
-    path('admin/send_notification/', views.admin_send_notification, name='admin_send_notification'),
-    path('user/request_requisition/', views.user_request_requisition, name='user_request_requisition'),
+    path('admin/send_notification/', admin_send_notification, name='admin_send_notification'),
+    path('user/request_requisition/', user_request_requisition, name='user_request_requisition'),
     path('hostels/', HostelListCreateView.as_view(), name='hostel-list-create'),
     path('hostels/<int:pk>/', HostelDetailView.as_view(), name='hostel-detail'),
     path('rooms/', RoomListCreateView.as_view(), name='room-list-create'),
@@ -39,8 +38,6 @@ urlpatterns = [
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
+    path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),  # Add this path for RoomDescriptionListCreateView
+    path('room-descriptions/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),  # Add this path for RoomDescriptionDetailView
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
-
-

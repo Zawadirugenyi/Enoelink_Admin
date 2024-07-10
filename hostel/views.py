@@ -1,94 +1,36 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import Hostel, Room, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
-from .serializers import (
-    HostelSerializer, RoomSerializer, TenantSerializer, StaffSerializer, 
-    BookingSerializer, MaintenanceSerializer, FacilitySerializer, 
-    PaymentSerializer, NotificationSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .models import (
+    Room, RoomDescription, Hostel, Tenant, Staff, Booking,
+    Maintenance, Facility, Payment, Notification
 )
-from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly, IsTenantOrReadOnly
+from .serializers import (
+    RoomSerializer, RoomDescriptionSerializer, HostelSerializer,
+    TenantSerializer, StaffSerializer, BookingSerializer,
+    MaintenanceSerializer, FacilitySerializer, PaymentSerializer,
+    NotificationSerializer
+)
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.http import JsonResponse
+from django.core.mail import send_mail
 
-def send_notification(message):
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        'notifications',
-        {
-            'type': 'notification_message',
-            'message': message
-        }
-    )
-
-def admin_send_notification(request):
-    # Your logic to send notification
-    send_notification("Admin sent a notification")
-    return JsonResponse({'status': 'Notification sent'})
+def admin_send_notification(subject, message, recipient_list):
+    """
+    Sends an email notification to specified recipients.
+    """
+    send_mail(subject, message, 'admin@example.com', recipient_list)
 
 def user_request_requisition(request):
-    # Your logic for user requisition
-    send_notification("User requested a requisition")
-    return JsonResponse({'status': 'Requisition requested'})
+    """
+    Handle user requisition request logic here.
+    """
+   
+    return HttpResponse("User requisition request handled successfully.")
 
-
-class HostelListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
-    serializer_class = HostelSerializer
-
-    def get(self, request):
-        hostels = Hostel.objects.all()
-        serializer = self.serializer_class(hostels, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class HostelDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
-    serializer_class = HostelSerializer
-
-    def get_object(self, pk):
-        try:
-            return Hostel.objects.get(pk=pk)
-        except Hostel.DoesNotExist:
-            return None
-
-    def get(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(hostel)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(hostel, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        hostel.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class RoomListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomSerializer
 
     def get(self, request):
@@ -103,8 +45,24 @@ class RoomListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class RoomDescriptionListCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = RoomDescriptionSerializer
+
+    def get(self, request):
+        room_descriptions = RoomDescription.objects.all()
+        serializer = self.serializer_class(room_descriptions, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class RoomDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomSerializer
 
     def get_object(self, pk):
@@ -137,8 +95,96 @@ class RoomDetailView(APIView):
         room.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class RoomDescriptionDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = RoomDescriptionSerializer
+
+    def get_object(self, pk):
+        try:
+            return RoomDescription.objects.get(pk=pk)
+        except RoomDescription.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        room_description = self.get_object(pk)
+        if room_description is None:
+            return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(room_description)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        room_description = self.get_object(pk)
+        if room_description is None:
+            return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(room_description, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        room_description = self.get_object(pk)
+        if room_description is None:
+            return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
+        room_description.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class HostelListCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = HostelSerializer
+
+    def get(self, request):
+        hostels = Hostel.objects.all()
+        serializer = self.serializer_class(hostels, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HostelDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = HostelSerializer
+
+    def get_object(self, pk):
+        try:
+            return Hostel.objects.get(pk=pk)
+        except Hostel.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(hostel)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(hostel, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        hostel.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class TenantListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TenantSerializer
 
     def get(self, request):
@@ -153,8 +199,9 @@ class TenantListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class TenantDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TenantSerializer
 
     def get_object(self, pk):
@@ -187,13 +234,14 @@ class TenantDetailView(APIView):
         tenant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class StaffListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StaffSerializer
 
     def get(self, request):
-        staffs = Staff.objects.all()
-        serializer = self.serializer_class(staffs, many=True)
+        staff = Staff.objects.all()
+        serializer = self.serializer_class(staff, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -202,6 +250,8 @@ class StaffListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class StaffDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -238,7 +288,7 @@ class StaffDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class BookingListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = BookingSerializer
 
     def get(self, request):
@@ -253,8 +303,9 @@ class BookingListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class BookingDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = BookingSerializer
 
     def get_object(self, pk):
@@ -288,7 +339,7 @@ class BookingDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class MaintenanceListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly, IsTenantOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = MaintenanceSerializer
 
     def get(self, request):
@@ -303,8 +354,9 @@ class MaintenanceListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class MaintenanceDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly, IsTenantOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = MaintenanceSerializer
 
     def get_object(self, pk):
@@ -316,14 +368,14 @@ class MaintenanceDetailView(APIView):
     def get(self, request, pk):
         maintenance = self.get_object(pk)
         if maintenance is None:
-            return Response({'error': 'Maintenance not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Maintenance record not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(maintenance)
         return Response(serializer.data)
 
     def put(self, request, pk):
         maintenance = self.get_object(pk)
         if maintenance is None:
-            return Response({'error': 'Maintenance not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Maintenance record not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(maintenance, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -333,12 +385,13 @@ class MaintenanceDetailView(APIView):
     def delete(self, request, pk):
         maintenance = self.get_object(pk)
         if maintenance is None:
-            return Response({'error': 'Maintenance not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Maintenance record not found'}, status=status.HTTP_404_NOT_FOUND)
         maintenance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class FacilityListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = FacilitySerializer
 
     def get(self, request):
@@ -353,8 +406,9 @@ class FacilityListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class FacilityDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = FacilitySerializer
 
     def get_object(self, pk):
@@ -387,8 +441,9 @@ class FacilityDetailView(APIView):
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class PaymentListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = PaymentSerializer
 
     def get(self, request):
@@ -403,8 +458,9 @@ class PaymentListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PaymentDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = PaymentSerializer
 
     def get_object(self, pk):
@@ -416,14 +472,14 @@ class PaymentDetailView(APIView):
     def get(self, request, pk):
         payment = self.get_object(pk)
         if payment is None:
-            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Payment record not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(payment)
         return Response(serializer.data)
 
     def put(self, request, pk):
         payment = self.get_object(pk)
         if payment is None:
-            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Payment record not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(payment, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -433,12 +489,13 @@ class PaymentDetailView(APIView):
     def delete(self, request, pk):
         payment = self.get_object(pk)
         if payment is None:
-            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Payment record not found'}, status=status.HTTP_404_NOT_FOUND)
         payment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class NotificationListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = NotificationSerializer
 
     def get(self, request):
@@ -453,8 +510,10 @@ class NotificationListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 class NotificationDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = NotificationSerializer
 
     def get_object(self, pk):
@@ -486,22 +545,3 @@ class NotificationDetailView(APIView):
             return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
         notification.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    
-
-# Define signals for automatic notifications
-@receiver(post_save, sender=Booking)
-def create_booking_notification(sender, instance, created, **kwargs):
-    if created:
-        Notification.objects.create(
-            user=instance.user,
-            message=f"Booking created: {instance.room.name} from {instance.start_date} to {instance.end_date}"
-        )
-
-@receiver(post_save, sender=Maintenance)
-def create_maintenance_notification(sender, instance, created, **kwargs):
-    if created:
-        Notification.objects.create(
-            user=instance.reported_by,
-            message=f"Maintenance request created: {instance.description}"
-        )
