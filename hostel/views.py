@@ -186,6 +186,7 @@ class HostelDetailView(APIView):
 class TenantListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TenantSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         tenants = Tenant.objects.all()
