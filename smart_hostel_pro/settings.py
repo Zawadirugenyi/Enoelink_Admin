@@ -182,7 +182,6 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Welcome to Smart Hostel Pro",
     "copyright": "Smart Hostel Pro",
     "language_chooser": True,
-   
     
 }
 
@@ -209,12 +208,12 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "default",
     "dark_mode_theme": None,
     "button_classes": {
-        "primary": "btn-outline-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
+    "primary": "btn-outline-primary",
+    "secondary": "btn-secondary",
+    "info": "btn-info",
+    "warning": "btn-warning",
+    "danger": "btn-danger",
+     "success": "btn-success"
     },
     "actions_sticky_top": False
 }

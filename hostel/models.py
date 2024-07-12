@@ -40,12 +40,22 @@ class RoomDescription(models.Model):
 
 class Tenant(models.Model):
     name = models.CharField(max_length=255)
+    major = models.CharField(max_length=255)
+    admin_number = models.CharField(max_length=255)
+    gender = models.CharField(max_length=255, default='Not specified')
+    nationality = models.CharField(max_length=255, default='Unknown')
+    passport = models.CharField(max_length=20, default='Unknown')
+    phone_number = models.CharField(max_length=12)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255, default='default_password')
-    phone_number = models.CharField(max_length=20)
+    passport_photo = models.ImageField(upload_to="tenant_image/", null=True, blank=True)
+    parent = models.CharField(max_length=20, default='Unknown')
+    position = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=12)
 
     def __str__(self):
         return self.name
+
 
 class Staff(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="staff")
