@@ -15,7 +15,7 @@ class RoomDescriptionSerializer(serializers.ModelSerializer):
 
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
-    description = RoomDescriptionSerializer(source='details', read_only=True)
+    description = RoomDescriptionSerializer(source='roomdescription', read_only=True)  # Adjust source based on your model
 
     class Meta:
         model = Room

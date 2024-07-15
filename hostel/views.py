@@ -1,3 +1,9 @@
+# views.py
+from django.http import JsonResponse
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from .utils import lipa_na_mpesa_online
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,7 +40,10 @@ class RoomListCreateView(APIView):
     serializer_class = RoomSerializer
 
     def get(self, request):
+        hostel_name = request.query_params.get('hostel__name', None)
         rooms = Room.objects.all()
+        if hostel_name:
+            rooms = rooms.filter(hostel__name=hostel_name)
         serializer = self.serializer_class(rooms, many=True)
         return Response(serializer.data)
 
@@ -44,6 +53,7 @@ class RoomListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class RoomDescriptionListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -546,3 +556,98 @@ class NotificationDetailView(APIView):
             return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
         notification.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+from django.http import JsonResponse
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+import datetime
+import base64
+
+# Replace these values with your credentials
+CONSUMER_KEY = 'YOUR_CONSUMER_KEY'
+CONSUMER_SECRET = 'YOUR_CONSUMER_SECRET'
+SHORTCODE = 'YOUR_SHORTCODE'
+LIPA_NA_MPESA_ONLINE_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+LIPA_NA_MPESA_ONLINE_CALLBACK_URL = 'YOUR_CALLBACK_URL'
+
+def get_mpesa_access_token():
+    consumer_key = CONSUMER_KEY
+    consumer_secret = CONSUMER_SECRET
+    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    
+    try:
+        response = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+        print("Access Token Request URL:", api_url)  # Debugging line
+        print("Access Token Request Headers:", response.request.headers)  # Debugging line
+        print("Access Token Response Status Code:", response.status_code)  # Debugging line
+        print("Access Token Response Text:", response.text)  # Debugging line
+        response.raise_for_status()  # Raise an error if the request was unsuccessful
+        json_response = response.json()
+        my_access_token = json_response['access_token']
+        return my_access_token
+    except requests.exceptions.RequestException as e:
+        print("Access Token Request Failed:", e)  # Debugging line
+        return None
+
+def lipa_na_mpesa_online(phone_number, amount, account_reference, transaction_desc):
+    access_token = get_mpesa_access_token()
+    if not access_token:
+        return {'error': 'Failed to obtain access token'}
+    
+    api_url = LIPA_NA_MPESA_ONLINE_URL
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    password = base64.b64encode(f'{SHORTCODE}{LIPA_NA_MPESA_ONLINE_CALLBACK_URL}{timestamp}'.encode()).decode('utf-8')
+    payload = {
+        "BusinessShortCode": SHORTCODE,
+        "Password": password,
+        "Timestamp": timestamp,
+        "TransactionType": "CustomerPayBillOnline",
+        "Amount": amount,
+        "PartyA": phone_number,
+        "PartyB": SHORTCODE,
+        "PhoneNumber": phone_number,
+        "CallBackURL": LIPA_NA_MPESA_ONLINE_CALLBACK_URL,
+        "AccountReference": account_reference,
+        "TransactionDesc": transaction_desc
+    }
+
+    try:
+        print("STK Push Request Payload:", payload)  # Debugging line
+        response = requests.post(api_url, json=payload, headers=headers)
+        print("Lipa na Mpesa Response Status Code:", response.status_code)  # Debugging line
+        print("Lipa na Mpesa Response Text:", response.text)  # Debugging line
+        response.raise_for_status()  # Raise an error if the request was unsuccessful
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("Lipa na Mpesa Request Failed:", e)  # Debugging line
+        return {'error': str(e)}
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MpesaPaymentView(View):
+    def post(self, request, *args, **kwargs):
+        phone_number = request.POST.get('phone_number')
+        amount = request.POST.get('amount')
+        account_reference = request.POST.get('account_reference')
+        transaction_desc = request.POST.get('transaction_desc')
+
+        response = lipa_na_mpesa_online(phone_number, amount, account_reference, transaction_desc)
+        return JsonResponse(response)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MpesaCallbackView(View):
+    def post(self, request, *args, **kwargs):
+        mpesa_body = request.body.decode('utf-8')
+        print(mpesa_body)  # For debugging
+        # Process the callback data as required
+        return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})

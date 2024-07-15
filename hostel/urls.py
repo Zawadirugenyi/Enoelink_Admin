@@ -1,5 +1,6 @@
 from django.urls import path
 from django.conf import settings
+from .views import MpesaPaymentView, MpesaCallbackView
 from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import (
@@ -17,7 +18,6 @@ from .views import (
 )
 
 urlpatterns = [
-    
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('admin/send_notification/', admin_send_notification, name='admin_send_notification'),
     path('user/request_requisition/', user_request_requisition, name='user_request_requisition'),
@@ -39,6 +39,10 @@ urlpatterns = [
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
-    path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),  # Add this path for RoomDescriptionListCreateView
-    path('room-descriptions/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),  # Add this path for RoomDescriptionDetailView
+    path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),
+    path('room-descriptions/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
+    path('api/payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
+    path('payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
+    path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
+ 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

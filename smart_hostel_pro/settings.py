@@ -217,4 +217,10 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 
-
+SAFARICOM_CONSUMER_KEY = 'your_consumer_key'
+SAFARICOM_CONSUMER_SECRET = 'your_consumer_secret'
+SAFARICOM_SHORTCODE = 'your_shortcode'
+SAFARICOM_LIPA_NA_MPESA_ONLINE_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+SAFARICOM_AUTH_URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+SAFARICOM_PASSKEY = 'your_passkey'
+SAFARICOM_CALLBACK_URL = 'https://your_domain.com/mpesa/callback'
