@@ -35,6 +35,8 @@ def user_request_requisition(request):
     return HttpResponse("User requisition request handled successfully.")
 
 
+
+# Room views
 class RoomListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomSerializer
@@ -55,22 +57,6 @@ class RoomListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class RoomDescriptionListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = RoomDescriptionSerializer
-
-    def get(self, request):
-        room_descriptions = RoomDescription.objects.all()
-        serializer = self.serializer_class(room_descriptions, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class RoomDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomSerializer
@@ -106,15 +92,51 @@ class RoomDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RoomDescriptionDetailView(APIView):
+class RoomDetailByNumberView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = RoomSerializer
+
+    def get(self, request, room_number):
+        try:
+            room = Room.objects.get(number=room_number)
+            serializer = self.serializer_class(room)
+            return Response(serializer.data)
+        except Room.DoesNotExist:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Room description views
+        
+
+class RoomDescriptionListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomDescriptionSerializer
 
-    def get_object(self, pk):
+    def get(self, request):
+        room_descriptions = RoomDescription.objects.all()
+        serializer = self.serializer_class(room_descriptions, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class RoomDescriptionDetailView(APIView):
+    serializer_class = RoomDescriptionSerializer
+
+    def get(self, request, room_number):
         try:
-            return RoomDescription.objects.get(pk=pk)
+            room = Room.objects.get(number=room_number)
+            room_description = RoomDescription.objects.get(room=room)
+            serializer = self.serializer_class(room_description)
+            return Response(serializer.data)
         except RoomDescription.DoesNotExist:
-            return None
+            return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def get(self, request, pk):
         room_description = self.get_object(pk)
@@ -141,6 +163,9 @@ class RoomDescriptionDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+
+# Hostel views
 class HostelListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = HostelSerializer
@@ -156,6 +181,7 @@ class HostelListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class HostelDetailView(APIView):

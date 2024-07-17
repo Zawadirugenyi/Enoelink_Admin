@@ -13,6 +13,8 @@ class RoomDescriptionSerializer(serializers.ModelSerializer):
         model = RoomDescription
         fields = '__all__'
 
+
+
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
     description = RoomDescriptionSerializer(source='roomdescription', read_only=True)  # Adjust source based on your model

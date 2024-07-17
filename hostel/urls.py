@@ -3,6 +3,7 @@ from django.conf import settings
 from .views import MpesaPaymentView, MpesaCallbackView
 from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
+from .views import RoomListCreateView, RoomDescriptionListCreateView, RoomDetailView, RoomDescriptionDetailView, RoomDetailByNumberView
 from .views import (
     HostelListCreateView, HostelDetailView,
     RoomListCreateView, RoomDetailView,
@@ -24,6 +25,7 @@ urlpatterns = [
     path('hostels/', HostelListCreateView.as_view(), name='hostel-list-create'),
     path('hostels/<int:pk>/', HostelDetailView.as_view(), name='hostel-detail'),
     path('rooms/', RoomListCreateView.as_view(), name='room-list-create'),
+    path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),
     path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
     path('tenants/', TenantListCreateView.as_view(), name='tenant-list-create'),
     path('tenants/<int:pk>/', TenantDetailView.as_view(), name='tenant-detail'),
@@ -39,8 +41,10 @@ urlpatterns = [
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
-    path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),
-    path('room-descriptions/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
+    path('api/room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list'),
+    path('api/room-description/<int:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
+    path('api/room-description/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
+    path('api/room-description/<int:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
     path('api/payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
     path('payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
     path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
