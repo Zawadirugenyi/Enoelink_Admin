@@ -170,19 +170,20 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+
+
 JAZZMIN_SETTINGS = {
     "site_title": "Smart Hostel Pro Admin",
     "site_header": "Smart Hostel Pro",
     "site_brand": "Smart Hostel Pro",
-    "site_logo": "smart_hostel_pro",
-    
-    "site_logo_classes": "img-circle",
+    "site_logo": "img/logoo.png",  
+    "site_logo_classes": "img/logoo.png",  
     "site_icon": None,
     "welcome_sign": "Welcome to Smart Hostel Pro",
     "copyright": "Smart Hostel Pro",
     "language_chooser": True,
-    
 }
+
 
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": True,
