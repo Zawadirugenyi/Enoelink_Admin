@@ -38,7 +38,7 @@ class StaffSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = '__all__'
+        fields = ['id', 'room', 'tenant', 'check_in_date', 'check_out_date']
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:

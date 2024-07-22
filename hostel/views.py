@@ -1,4 +1,11 @@
 # views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .models import Booking, Maintenance, Tenant, Room
+from .serializers import BookingSerializer, MaintenanceSerializer
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -324,22 +331,37 @@ class StaffDetailView(APIView):
         staff.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
 class BookingListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        bookings = Booking.objects.all()
-        serializer = self.serializer_class(bookings, many=True)
-        return Response(serializer.data)
+        if request.user.is_staff:
+            bookings = Booking.objects.all()
+            serializer = BookingSerializer(bookings, many=True)
+            return Response(serializer.data)
+        return Response({'error': 'You do not have permission to view this data.'}, status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        user = request.user
+        tenant = Tenant.objects.filter(user=user).first()
+
+        if not tenant:
+            tenant = Tenant.objects.create(
+                user=user,
+                name=user.username,  # Or however you want to set the tenant's name
+                email=user.email     # Assuming the email field is unique
+            )
+
+        data = request.data.copy()
+        data['tenant'] = tenant.id
+
+        serializer = BookingSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class BookingDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -374,6 +396,10 @@ class BookingDetailView(APIView):
             return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+    
+    
 
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]

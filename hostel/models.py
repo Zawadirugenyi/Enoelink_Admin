@@ -39,6 +39,7 @@ class RoomDescription(models.Model):
         return f'Description for Room {self.room.number}'
 
 class Tenant(models.Model):
+
     name = models.CharField(max_length=255)
     major = models.CharField(max_length=255)
     admin_number = models.CharField(max_length=255)
