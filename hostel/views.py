@@ -38,7 +38,7 @@ def user_request_requisition(request):
 
 # Room views
 class RoomListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated] 
     serializer_class = RoomSerializer
 
     def get(self, request):
