@@ -69,21 +69,14 @@ class Staff(models.Model):
 
 
 
-from django.db import models
-
 class Booking(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="bookings")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     check_in_date = models.DateField()
     check_out_date = models.DateField()
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['tenant'], name='unique_tenant_booking')
-        ]
-
-    def __str__(self):
-        return f"{self.tenant.name} booking for Room {self.room.number}"
+        unique_together = ('room', 'tenant', 'check_in_date', 'check_out_date')
 
 
 

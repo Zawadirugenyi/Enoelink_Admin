@@ -340,6 +340,32 @@ class BookingListCreateView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework import generics
+from .models import Booking
+from .serializers import BookingSerializer
+
+class BookingByRoomAndTenantView(generics.ListCreateAPIView):
+    serializer_class = BookingSerializer
+
+    def get_queryset(self):
+        room_id = self.kwargs['room_id']
+        tenant_id = self.kwargs['tenant_id']
+        return Booking.objects.filter(room_id=room_id, tenant_id=tenant_id)
+    
+    from datetime import datetime
+
+def check_booking_overlap(room_id, tenant_id, check_in_date, check_out_date):
+    bookings = Booking.objects.filter(
+        room_id=room_id,
+        tenant_id=tenant_id
+    )
+
+    for booking in bookings:
+        if (check_in_date < booking.check_out_date and check_out_date > booking.check_in_date):
+            return True  # Overlap found
+
+    return False
+
 
 
 class BookingDetailView(APIView):
@@ -376,7 +402,7 @@ class BookingDetailView(APIView):
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-    
+
 
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
