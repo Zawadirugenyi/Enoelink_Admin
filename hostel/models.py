@@ -19,12 +19,14 @@ class Room(models.Model):
     )
 
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="rooms")
-    number = models.IntegerField()
+    number = models.CharField(max_length=10)
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
+    
+
 
 class RoomDescription(models.Model):
     room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name="description")
@@ -39,8 +41,7 @@ class RoomDescription(models.Model):
         return f'Description for Room {self.room.number}'
 
 class Tenant(models.Model):
-
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     major = models.CharField(max_length=255)
     admin_number = models.CharField(max_length=255)
     gender = models.CharField(max_length=255, default='Not specified')
@@ -66,14 +67,26 @@ class Staff(models.Model):
     def __str__(self):
         return f"{self.name}, ({self.position})"
 
+
+
+from django.db import models
+
 class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
-    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="bookings")
     check_in_date = models.DateField()
     check_out_date = models.DateField()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['tenant'], name='unique_tenant_booking')
+        ]
+
     def __str__(self):
         return f"{self.tenant.name} booking for Room {self.room.number}"
+
+
+
 
 class Maintenance(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="maintenance")

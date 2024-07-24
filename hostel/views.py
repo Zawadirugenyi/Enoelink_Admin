@@ -219,6 +219,60 @@ class HostelDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+class StaffListCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = StaffSerializer
+
+    def get(self, request):
+        staff = Staff.objects.all()
+        serializer = self.serializer_class(staff, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class StaffDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = StaffSerializer
+
+    def get_object(self, pk):
+        try:
+            return Staff.objects.get(pk=pk)
+        except Staff.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        staff = self.get_object(pk)
+        if staff is None:
+            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(staff)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        staff = self.get_object(pk)
+        if staff is None:
+            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(staff, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        staff = self.get_object(pk)
+        if staff is None:
+            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
+        staff.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
 class TenantListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TenantSerializer
@@ -272,73 +326,20 @@ class TenantDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class StaffListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = StaffSerializer
-
-    def get(self, request):
-        staff = Staff.objects.all()
-        serializer = self.serializer_class(staff, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-class StaffDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = StaffSerializer
-
-    def get_object(self, pk):
-        try:
-            return Staff.objects.get(pk=pk)
-        except Staff.DoesNotExist:
-            return None
-
-    def get(self, request, pk):
-        staff = self.get_object(pk)
-        if staff is None:
-            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(staff)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        staff = self.get_object(pk)
-        if staff is None:
-            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(staff, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        staff = self.get_object(pk)
-        if staff is None:
-            return Response({'error': 'Staff not found'}, status=status.HTTP_404_NOT_FOUND)
-        staff.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 class BookingListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = BookingSerializer
 
-    def get(self, request):
-        bookings = Booking.objects.all()
-        serializer = self.serializer_class(bookings, many=True)
-        return Response(serializer.data)
-
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class BookingDetailView(APIView):
@@ -374,6 +375,8 @@ class BookingDetailView(APIView):
             return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
 
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]

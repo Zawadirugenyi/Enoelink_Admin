@@ -1,5 +1,3 @@
-# serializers.py
-
 from rest_framework import serializers
 from .models import Hostel, Room, RoomDescription, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
 
@@ -15,11 +13,9 @@ class RoomDescriptionSerializer(serializers.ModelSerializer):
         model = RoomDescription
         fields = ['id', 'room_number', 'sitting_room_image', 'bedroom_image', 'kitchen_image', 'bathroom_image', 'description', 'price']
 
-
-
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
-    description = RoomDescriptionSerializer(source='roomdescription', read_only=True)  # Adjust source based on your model
+    description = RoomDescriptionSerializer(source='roomdescription', read_only=True)  # Adjust if necessary
 
     class Meta:
         model = Room
@@ -39,6 +35,11 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = ['id', 'room', 'tenant', 'check_in_date', 'check_out_date']
+    
+    def validate_room(self, value):
+        if not Room.objects.filter(id=value.id).exists():
+            raise serializers.ValidationError("Invalid room ID.")
+        return value
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:
