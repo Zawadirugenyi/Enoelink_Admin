@@ -41,6 +41,7 @@ class RoomDescription(models.Model):
         return f'Description for Room {self.room.number}'
 
 class Tenant(models.Model):
+
     name = models.CharField(max_length=100)
     major = models.CharField(max_length=255)
     admin_number = models.CharField(max_length=255)
@@ -70,14 +71,13 @@ class Staff(models.Model):
 
 
 class Booking(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="bookings")
     check_in_date = models.DateField()
     check_out_date = models.DateField()
 
-    class Meta:
-        unique_together = ('room', 'tenant', 'check_in_date', 'check_out_date')
-
+    def __str__(self):
+        return f"{self.tenant.name} booking for Room {self.room.number}"
 
 
 

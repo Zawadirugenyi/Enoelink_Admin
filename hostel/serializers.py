@@ -31,15 +31,12 @@ class StaffSerializer(serializers.ModelSerializer):
         model = Staff
         fields = '__all__'
 
+from .models import Booking
+
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['id', 'room', 'tenant', 'check_in_date', 'check_out_date']
-    
-    def validate_room(self, value):
-        if not Room.objects.filter(id=value.id).exists():
-            raise serializers.ValidationError("Invalid room ID.")
-        return value
+        fields = '__all__'
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:
