@@ -31,12 +31,12 @@ class StaffSerializer(serializers.ModelSerializer):
         model = Staff
         fields = '__all__'
 
-from .models import Booking
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = '__all__'
+        fields = ['id', 'room', 'tenant', 'check_in_date', 'check_out_date']
+
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:

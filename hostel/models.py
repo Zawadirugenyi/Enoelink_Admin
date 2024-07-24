@@ -70,14 +70,35 @@ class Staff(models.Model):
 
 
 
+
+from django.db import models
+from django.core.exceptions import ValidationError
+
 class Booking(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="bookings")
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="bookings")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     check_in_date = models.DateField()
     check_out_date = models.DateField()
 
-    def __str__(self):
-        return f"{self.tenant.name} booking for Room {self.room.number}"
+    def clean(self):
+        # Ensure the check-in date is before the check-out date
+        if self.check_in_date >= self.check_out_date:
+            raise ValidationError('Check-out date must be after check-in date.')
+
+        # Check for overlapping bookings
+        overlapping_bookings = Booking.objects.filter(
+            room=self.room,
+            check_in_date__lt=self.check_out_date,
+            check_out_date__gt=self.check_in_date
+        ).exclude(id=self.id)
+
+        if overlapping_bookings.exists():
+            raise ValidationError('This room is already booked for the selected dates.')
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Ensure clean method is called on save
+        super().save(*args, **kwargs)
+
 
 
 
