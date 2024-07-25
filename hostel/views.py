@@ -1,6 +1,13 @@
 # views.py
+from django.shortcuts import get_object_or_404
+import requests
+from requests.auth import HTTPBasicAuth
+import json
+import datetime
+import base64
 from django.http import JsonResponse
 from django.views import View
+from rest_framework import generics
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .utils import lipa_na_mpesa_online
@@ -33,7 +40,6 @@ def user_request_requisition(request):
     """
    
     return HttpResponse("User requisition request handled successfully.")
-
 
 
 # Room views
@@ -107,7 +113,6 @@ class RoomDetailByNumberView(APIView):
 
 # Room description views
         
-
 class RoomDescriptionListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = RoomDescriptionSerializer
@@ -166,6 +171,7 @@ class RoomDescriptionDetailView(APIView):
 
 
 # Hostel views
+    
 class HostelListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = HostelSerializer
@@ -219,6 +225,8 @@ class HostelDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Tenant views
+    
 class TenantListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TenantSerializer
@@ -272,6 +280,8 @@ class TenantDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Staff views
+    
 class StaffListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = StaffSerializer
@@ -287,7 +297,6 @@ class StaffListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class StaffDetailView(APIView):
@@ -325,6 +334,8 @@ class StaffDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Booking views
+
 class BookingListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = BookingSerializer
@@ -338,6 +349,48 @@ class BookingListCreateView(APIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+def book_room(request):
+    if request.method == 'POST':
+        room_id = request.POST.get('room_id')
+        tenant_id = request.POST.get('tenant_id')
+        check_in_date = request.POST.get('check_in_date')
+        check_out_date = request.POST.get('check_out_date')
+
+        room = get_object_or_404(Room, id=room_id)
+        tenant = get_object_or_404(Tenant, id=tenant_id)
+
+        booking = Booking.objects.create(
+            room=room,
+            tenant=tenant,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
+
+        room.is_booked = True
+        room.save()
+
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})
+
+
+def available_rooms(request):
+    hostel_name = request.GET.get('hostel__name', '')
+    rooms = Room.objects.filter(hostel__name=hostel_name)
+    room_data = list(rooms.values('id', 'number', 'room_type', 'image'))
+    return JsonResponse(room_data, safe=False)
+
+
+class AvailableRoomsListView(generics.ListAPIView):
+    serializer_class = RoomSerializer
+
+    def get_queryset(self):
+        hostel_name = self.request.query_params.get('hostel__name')
+        if hostel_name:
+            return Room.objects.filter(hostel__name=hostel_name, is_available=True)
+        return Room.objects.filter(is_available=True)
 
 
 class BookingDetailView(APIView):
@@ -373,6 +426,8 @@ class BookingDetailView(APIView):
             return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+ # Maintenance views   
 
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -426,6 +481,8 @@ class MaintenanceDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Facility views
+    
 class FacilityListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = FacilitySerializer
@@ -477,7 +534,8 @@ class FacilityDetailView(APIView):
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+# Payment views
+    
 class PaymentListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = PaymentSerializer
@@ -530,6 +588,8 @@ class PaymentDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# Notifi views
+    
 class NotificationListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = NotificationSerializer
@@ -585,17 +645,7 @@ class NotificationDetailView(APIView):
 
 
 
-from django.http import JsonResponse
-from django.views import View
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-import requests
-from requests.auth import HTTPBasicAuth
-import json
-import datetime
-import base64
 
-# Replace these values with your credentials
 CONSUMER_KEY = 'YOUR_CONSUMER_KEY'
 CONSUMER_SECRET = 'YOUR_CONSUMER_SECRET'
 SHORTCODE = 'YOUR_SHORTCODE'
