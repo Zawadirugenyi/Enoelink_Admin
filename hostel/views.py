@@ -335,6 +335,7 @@ class StaffDetailView(APIView):
 
 
 # Booking views
+    
 
 class BookingListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -349,7 +350,21 @@ class BookingListCreateView(APIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
+def create_booking(room_id, tenant_id, check_in_date, check_out_date):
+    room = Room.objects.get(id=room_id)
+    if not room.is_booked:
+        Booking.objects.create(
+            room=room,
+            tenant_id=tenant_id,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
+        room.is_booked = True
+        room.save()
+    else:
+        raise ValueError("Room is already booked")
 
 
 def book_room(request):
@@ -377,6 +392,8 @@ def book_room(request):
 
 
 def available_rooms(request):
+    available_rooms = Room.objects.filter(is_booked=False)
+
     hostel_name = request.GET.get('hostel__name', '')
     rooms = Room.objects.filter(hostel__name=hostel_name)
     room_data = list(rooms.values('id', 'number', 'room_type', 'image'))

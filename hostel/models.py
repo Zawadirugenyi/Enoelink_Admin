@@ -70,6 +70,9 @@ class Staff(models.Model):
         return f"{self.name}, ({self.position})"
 
 
+from django.db import models
+from django.core.exceptions import ValidationError
+
 class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
@@ -96,6 +99,8 @@ class Booking(models.Model):
         super().save(*args, **kwargs)
 
 
+
+
 class Maintenance(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="maintenance")
     description = models.TextField()
@@ -103,7 +108,6 @@ class Maintenance(models.Model):
 
     def __str__(self):
         return f'Maintenance for Room {self.room.number} - {"Completed" if self.completed else "Pending"}'
-
 
 class Facility(models.Model):
     hostel = models.ForeignKey(
@@ -116,7 +120,6 @@ class Facility(models.Model):
     def __str__(self):
         return f"{self.name} at {self.hostel.name}"
 
-
 class Payment(models.Model):
     tenant = models.ForeignKey(
         Tenant, on_delete=models.CASCADE, related_name="payments"
@@ -127,7 +130,6 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment of {self.amount} by {self.tenant.name} on {self.date}"
 
- 
 class Notification(models.Model):
     tenant = models.ForeignKey(
         Tenant,
