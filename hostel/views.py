@@ -1,4 +1,8 @@
 # views.py
+from django.http import JsonResponse
+from django.utils.dateparse import parse_date
+from django.shortcuts import render
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 import requests
 from requests.auth import HTTPBasicAuth
@@ -43,6 +47,7 @@ def user_request_requisition(request):
 
 
 # Room views
+
 class RoomListCreateView(APIView):
     permission_classes = [IsAuthenticated] 
     serializer_class = RoomSerializer
@@ -61,6 +66,33 @@ class RoomListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def available_rooms_view(request):
+    available_rooms = Room.objects.filter(is_booked=False)
+    return render(request, 'available_rooms.html', {'rooms': available_rooms})
+
+
+def check_room_availability(request):
+    room_id = request.GET.get('room_id')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if not room_id or not start_date or not end_date:
+        return JsonResponse({'error': 'Missing parameters.'}, status=400)
+
+    start_date = parse_date(start_date)
+    end_date = parse_date(end_date)
+
+    overlapping_bookings = Booking.objects.filter(
+        room_id=room_id,
+        check_out_date__gte=start_date,
+        check_in_date__lte=end_date
+    )
+
+    available = not overlapping_bookings.exists()
+
+    return JsonResponse({'available': available})
 
 
 class RoomDetailView(APIView):
@@ -129,29 +161,71 @@ class RoomDescriptionListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
+class RoomDescriptionView(APIView):
+    def get(self, request, room_number, hostel_id):
+        try:
+            room_description = RoomDescription.objects.get(room_number=room_number, hostel_id=hostel_id)
+            serializer = RoomDescriptionSerializer(room_description)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except RoomDescription.DoesNotExist:
+            return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
+        
 class RoomDescriptionDetailView(APIView):
     serializer_class = RoomDescriptionSerializer
 
-    def get(self, request, room_number):
+    def get(self, request, room_number, hostel_id):
         try:
-            room = Room.objects.get(number=room_number)
+            room = Room.objects.get(number=room_number, hostel_id=hostel_id)
             room_description = RoomDescription.objects.get(room=room)
             serializer = self.serializer_class(room_description)
             return Response(serializer.data)
         except RoomDescription.DoesNotExist:
             return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Room.DoesNotExist:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+from django.http import JsonResponse
+from .models import RoomDescription
 
-    def get(self, request, pk):
-        room_description = self.get_object(pk)
+def get_room_description(request, room_number, hostel_id):
+    try:
+        room_description = RoomDescription.objects.get(room_number=room_number, hostel_id=hostel_id)
+        data = {
+            "room_number": room_description.room_number,
+            "sitting_room_image": room_description.sitting_room_image.url,
+            "bedroom_image": room_description.bedroom_image.url,
+            "kitchen_image": room_description.kitchen_image.url,
+            "bathroom_image": room_description.bathroom_image.url,
+            "description": room_description.description,
+            "price": room_description.price,
+        }
+        return JsonResponse(data)
+    except RoomDescription.DoesNotExist:
+        return JsonResponse({"error": "Room description not found"}, status=404)
+
+
+
+class RoomDescriptionDetailView(APIView):
+    serializer_class = RoomDescriptionSerializer
+
+    def get_object(self, room_number, hostel_id):
+        try:
+            room = Room.objects.get(number=room_number, hostel_id=hostel_id)
+            return RoomDescription.objects.get(room=room)
+        except Room.DoesNotExist:
+            return None
+        except RoomDescription.DoesNotExist:
+            return None
+
+    def get(self, request, room_number, hostel_id):
+        room_description = self.get_object(room_number, hostel_id)
         if room_description is None:
             return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(room_description)
         return Response(serializer.data)
 
-    def put(self, request, pk):
-        room_description = self.get_object(pk)
+    def put(self, request, room_number, hostel_id):
+        room_description = self.get_object(room_number, hostel_id)
         if room_description is None:
             return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.serializer_class(room_description, data=request.data)
@@ -160,8 +234,8 @@ class RoomDescriptionDetailView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        room_description = self.get_object(pk)
+    def delete(self, request, room_number, hostel_id):
+        room_description = self.get_object(room_number, hostel_id)
         if room_description is None:
             return Response({'error': 'Room description not found'}, status=status.HTTP_404_NOT_FOUND)
         room_description.delete()
@@ -335,13 +409,16 @@ class StaffDetailView(APIView):
 
 
 # Booking views
-    
+      
 
-class BookingListCreateView(APIView):
+class BookingListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = BookingSerializer
 
-    def post(self, request):
+    def get_queryset(self):
+        return Booking.objects.all()
+
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             try:
@@ -351,6 +428,51 @@ class BookingListCreateView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+class BookingCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_id = serializer.validated_data['room'].id
+            check_in_date = serializer.validated_data['check_in_date']
+            check_out_date = serializer.validated_data['check_out_date']
+
+            # Check availability
+            availability_check = check_room_availability(request)
+            if not availability_check.json().get('available'):
+                return Response({'error': 'Room is not available for these dates.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AvailableRoomsList(generics.ListAPIView):
+    serializer_class = RoomSerializer
+
+    def get_queryset(self):
+        check_in_date = self.request.query_params.get('check_in_date')
+        check_out_date = self.request.query_params.get('check_out_date')
+
+        if check_in_date and check_out_date:
+            # Convert to date objects
+            check_in_date = timezone.datetime.strptime(check_in_date, "%Y-%m-%d").date()
+            check_out_date = timezone.datetime.strptime(check_out_date, "%Y-%m-%d").date()
+
+            # Get booked room IDs
+            booked_rooms = Booking.objects.filter(
+                check_in_date__lt=check_out_date,
+                check_out_date__gt=check_in_date
+            ).values_list('room_id', flat=True)
+
+            # Exclude booked rooms from available rooms
+            return Room.objects.exclude(id__in=booked_rooms).exclude(is_booked=True)
+        else:
+            return Room.objects.exclude(is_booked=True)
 
 def create_booking(room_id, tenant_id, check_in_date, check_out_date):
     room = Room.objects.get(id=room_id)
@@ -444,6 +566,9 @@ class BookingDetailView(APIView):
         booking.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+
+
+
  # Maintenance views   
 
 class MaintenanceListCreateView(APIView):
@@ -498,6 +623,10 @@ class MaintenanceDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+
+
+
 # Facility views
     
 class FacilityListCreateView(APIView):
@@ -515,7 +644,6 @@ class FacilityListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class FacilityDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -550,6 +678,9 @@ class FacilityDetailView(APIView):
             return Response({'error': 'Facility not found'}, status=status.HTTP_404_NOT_FOUND)
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
 
 # Payment views
     
@@ -605,6 +736,8 @@ class PaymentDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+
 # Notifi views
     
 class NotificationListCreateView(APIView):
@@ -622,7 +755,6 @@ class NotificationListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class NotificationDetailView(APIView):

@@ -11,7 +11,8 @@ class RoomDescriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RoomDescription
-        fields = ['id', 'room_number', 'sitting_room_image', 'bedroom_image', 'kitchen_image', 'bathroom_image', 'description', 'price']
+        fields = '__all__'
+        
 
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
@@ -19,7 +20,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name', 'description']
+        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name', 'description', 'is_booked']
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,7 +36,7 @@ class StaffSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ['id', 'room', 'tenant', 'check_in_date', 'check_out_date']
+        fields = '__all__'
 
 
 class MaintenanceSerializer(serializers.ModelSerializer):

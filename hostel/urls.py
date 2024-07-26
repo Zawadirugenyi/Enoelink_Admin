@@ -1,6 +1,8 @@
 from django.urls import path
 from django.conf import settings
 from .views import MpesaPaymentView, MpesaCallbackView
+from .views import AvailableRoomsList
+from .views import check_room_availability, create_booking
 from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import RoomListCreateView, RoomDescriptionListCreateView, RoomDetailView, RoomDescriptionDetailView
@@ -39,6 +41,7 @@ urlpatterns = [
     path('bookings/', BookingListCreateView.as_view(), name='booking-list-create'),
     path('api/bookings/<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
     path('bookings/<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
+     path('available-rooms/', AvailableRoomsList.as_view(), name='available-rooms'),
 
     path('maintenances/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
     path('maintenances/<int:pk>/', MaintenanceDetailView.as_view(), name='maintenance-detail'),
@@ -62,4 +65,8 @@ urlpatterns = [
     path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+
 
