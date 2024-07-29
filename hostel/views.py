@@ -6,7 +6,17 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 import requests
 from requests.auth import HTTPBasicAuth
-import json
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Room, Booking
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from .models import Room, Booking
+from .serializers import BookingSerializer
 import datetime
 import base64
 from django.http import JsonResponse
@@ -46,6 +56,65 @@ def user_request_requisition(request):
     return HttpResponse("User requisition request handled successfully.")
 
 
+
+
+
+# Hostel views
+    
+class HostelListCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = HostelSerializer
+
+    def get(self, request):
+        hostels = Hostel.objects.all()
+        serializer = self.serializer_class(hostels, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class HostelDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = HostelSerializer
+
+    def get_object(self, pk):
+        try:
+            return Hostel.objects.get(pk=pk)
+        except Hostel.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(hostel)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(hostel, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        hostel = self.get_object(pk)
+        if hostel is None:
+            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
+        hostel.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
 # Room views
 
 class RoomListCreateView(APIView):
@@ -66,6 +135,38 @@ class RoomListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Room
+from .serializers import RoomSerializer
+
+@api_view(['POST'])
+def book_room(request, room_number):
+    try:
+        room = Room.objects.get(number=room_number)
+    except Room.DoesNotExist:
+        return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if room.is_booked:
+        return Response({'error': 'Room is already booked'}, status=status.HTTP_400_BAD_REQUEST)
+
+    room.is_booked = True
+    room.save()
+
+    serializer = RoomSerializer(room)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class RoomAvailabilityCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, room_number, hostel_id):
+        room = get_object_or_404(Room, number=room_number, hostel_id=hostel_id)
+        is_booked = Booking.objects.filter(room=room).exists()
+        return JsonResponse({'is_booked': is_booked})
 
 
 def available_rooms_view(request):
@@ -143,7 +244,23 @@ class RoomDetailByNumberView(APIView):
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 # Room description views
+    
+
+def room_description(request, room_number):
+    try:
+        description = RoomDescription.objects.get(room_number=room_number)
+        data = {
+            'description': description.description,
+            'capacity': description.capacity,
+            'price': description.price,
+            'images': [img.image.url for img in description.images.all()],
+        }
+        return JsonResponse(data)
+    except RoomDescription.DoesNotExist:
+        return JsonResponse({'error': 'Room description not found'}, status=404)
+
         
 class RoomDescriptionListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -160,6 +277,8 @@ class RoomDescriptionListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 class RoomDescriptionView(APIView):
     def get(self, request, room_number, hostel_id):
@@ -184,24 +303,25 @@ class RoomDescriptionDetailView(APIView):
         except Room.DoesNotExist:
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
         
-from django.http import JsonResponse
-from .models import RoomDescription
 
-def get_room_description(request, room_number, hostel_id):
-    try:
-        room_description = RoomDescription.objects.get(room_number=room_number, hostel_id=hostel_id)
-        data = {
-            "room_number": room_description.room_number,
-            "sitting_room_image": room_description.sitting_room_image.url,
-            "bedroom_image": room_description.bedroom_image.url,
-            "kitchen_image": room_description.kitchen_image.url,
-            "bathroom_image": room_description.bathroom_image.url,
-            "description": room_description.description,
-            "price": room_description.price,
-        }
-        return JsonResponse(data)
-    except RoomDescription.DoesNotExist:
-        return JsonResponse({"error": "Room description not found"}, status=404)
+# hostel/views.py
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import RoomDescription
+from .serializers import RoomDescriptionSerializer
+
+class RoomDescriptionView(APIView):
+    def get(self, request):
+        room_number = request.query_params.get('room__number')
+        hostel_name = request.query_params.get('hostel__name')
+        
+        if not room_number or not hostel_name:
+            return Response({"error": "room__number and hostel__name are required parameters"}, status=400)
+        
+        room_description = get_object_or_404(RoomDescription, room__number=room_number, hostel__name=hostel_name)
+        serializer = RoomDescriptionSerializer(room_description)
+        return Response(serializer.data)
 
 
 
@@ -243,62 +363,6 @@ class RoomDescriptionDetailView(APIView):
 
 
 
-
-# Hostel views
-    
-class HostelListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = HostelSerializer
-
-    def get(self, request):
-        hostels = Hostel.objects.all()
-        serializer = self.serializer_class(hostels, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-class HostelDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = HostelSerializer
-
-    def get_object(self, pk):
-        try:
-            return Hostel.objects.get(pk=pk)
-        except Hostel.DoesNotExist:
-            return None
-
-    def get(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(hostel)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(hostel, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        hostel = self.get_object(pk)
-        if hostel is None:
-            return Response({'error': 'Hostel not found'}, status=status.HTTP_404_NOT_FOUND)
-        hostel.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 # Tenant views
     
 class TenantListCreateView(APIView):
@@ -320,10 +384,11 @@ class TenantListCreateView(APIView):
 
 
 class TenantDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = TenantSerializer
+       
 
-    def get_object(self, pk):
+    def get_object(self, pk,  format=None):
         try:
             return Tenant.objects.get(pk=pk)
         except Tenant.DoesNotExist:
@@ -428,27 +493,54 @@ class BookingListCreateView(generics.ListCreateAPIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+# views.py
 
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Room, Booking
 
-class BookingCreateView(APIView):
+class RoomAvailabilityCheckView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = BookingSerializer
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            room_id = serializer.validated_data['room'].id
-            check_in_date = serializer.validated_data['check_in_date']
-            check_out_date = serializer.validated_data['check_out_date']
+    def get(self, request, room_number, hostel_id):
+        room = get_object_or_404(Room, number=room_number, hostel_id=hostel_id)
+        is_booked = Booking.objects.filter(room=room).exists()
+        return JsonResponse({'is_booked': is_booked})
 
-            # Check availability
-            availability_check = check_room_availability(request)
-            if not availability_check.json().get('available'):
-                return Response({'error': 'Room is not available for these dates.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_booking(request):
+    data = request.data
+    room_id = data.get('room')
+    tenant_id = data.get('tenant')
+    check_in_date = data.get('check_in_date')
+    check_out_date = data.get('check_out_date')
+
+    try:
+        room = Room.objects.get(id=room_id)
+        if room.is_booked:
+            return Response({'detail': 'This room is already booked.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        booking = Booking.objects.create(
+            room=room,
+            tenant_id=tenant_id,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
+        
+        room.is_booked = True
+        room.save()
+
+        serializer = BookingSerializer(booking)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Room.DoesNotExist:
+        return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class AvailableRoomsList(generics.ListAPIView):
@@ -533,7 +625,8 @@ class AvailableRoomsListView(generics.ListAPIView):
 
 
 class BookingDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+   
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
 
     def get_object(self, pk):

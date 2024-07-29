@@ -10,6 +10,8 @@ class Hostel(models.Model):
         return self.name
     
 
+from django.db import models
+
 class Room(models.Model):
     ROOM_TYPES = (
         ("bedsitter", "Bedsitter"),
@@ -17,28 +19,15 @@ class Room(models.Model):
         ("two_bedrooms", "Two Bedrooms"),
         ("three_bedrooms", "Three Bedrooms"),
     )
-    hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="rooms")
+
+    hostel = models.ForeignKey('Hostel', on_delete=models.CASCADE, related_name="rooms")
     number = models.CharField(max_length=10)
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
-    is_booked = models.BooleanField(default=False)
+    status = models.BooleanField(default=True) 
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
-
-
-class RoomDescription(models.Model):
-    room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name="description")
-    sitting_room_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
-    bedroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
-    kitchen_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
-    bathroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
-    description = models.TextField(max_length=2000)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f'Description for Room {self.room.number}'
-
 
 class Tenant(models.Model):
     name = models.CharField(max_length=100)
@@ -55,6 +44,21 @@ class Tenant(models.Model):
 
     def __str__(self):
         return self.name
+
+class RoomDescription(models.Model):
+    room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name="description")
+    sitting_room_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    bedroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    kitchen_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    bathroom_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
+    description = models.TextField(max_length=2000)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f'Description for Room {self.room.number}'
+
+
+
 
 
 class Staff(models.Model):

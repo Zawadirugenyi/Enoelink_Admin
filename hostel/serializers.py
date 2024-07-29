@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Hostel, Room, RoomDescription, Tenant, Staff, Booking, Maintenance, Facility, Payment, Notification
+from .models import Booking, Room, Hostel, RoomDescription, Tenant, Staff, Maintenance, Facility, Payment, Notification
 
 class HostelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,19 +8,19 @@ class HostelSerializer(serializers.ModelSerializer):
 
 class RoomDescriptionSerializer(serializers.ModelSerializer):
     room_number = serializers.CharField(source='room.number', read_only=True)
+    hostel_name = serializers.CharField(source='room.hostel.name')
 
     class Meta:
         model = RoomDescription
-        fields = '__all__'
-        
+        fields = ['room_number', 'hostel_name', 'sitting_room_image', 'bedroom_image', 'kitchen_image', 'bathroom_image', 'description', 'price']
 
 class RoomSerializer(serializers.ModelSerializer):
     hostel_name = serializers.CharField(source='hostel.name', read_only=True)
-    description = RoomDescriptionSerializer(source='roomdescription', read_only=True)  # Adjust if necessary
+    description = RoomDescriptionSerializer(source='roomdescription', read_only=True)
 
     class Meta:
         model = Room
-        fields = ['id', 'number', 'room_type', 'image', 'hostel', 'hostel_name', 'description', 'is_booked']
+        fields = '__all__'
 
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,12 +32,17 @@ class StaffSerializer(serializers.ModelSerializer):
         model = Staff
         fields = '__all__'
 
-
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
 
+    def create(self, validated_data):
+        booking = super().create(validated_data)
+        room = booking.room
+        room.status = False  # Mark room as booked
+        room.save()
+        return booking
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:

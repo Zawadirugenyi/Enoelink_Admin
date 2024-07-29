@@ -1,9 +1,13 @@
 from django.urls import path
 from django.conf import settings
+from django.urls import path
+from .views import RoomDescriptionDetailView
 from .views import MpesaPaymentView, MpesaCallbackView
 from .views import AvailableRoomsList
-from .views import check_room_availability, create_booking
+from .views import RoomAvailabilityCheckView
 from django.conf.urls.static import static
+from . import views
+from .views import book_room
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import RoomListCreateView, RoomDescriptionListCreateView, RoomDetailView, RoomDescriptionDetailView
 from .views import (
@@ -29,8 +33,10 @@ urlpatterns = [
     path('hostels/<int:pk>/', HostelDetailView.as_view(), name='hostel-detail'),
 
     path('rooms/', RoomListCreateView.as_view(), name='room-list-create'),
+     path('api/room-descriptions/<int:room_number>/description/', views.room_description, name='room-description'),
     path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),
     path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
+    path('book-room/<str:room_number>/', book_room, name='book_room'),
 
     path('tenants/', TenantListCreateView.as_view(), name='tenant-list-create'),
     path('tenants/<int:pk>/', TenantDetailView.as_view(), name='tenant-detail'),
@@ -41,7 +47,8 @@ urlpatterns = [
     path('bookings/', BookingListCreateView.as_view(), name='booking-list-create'),
     path('api/bookings/<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
     path('bookings/<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
-     path('available-rooms/', AvailableRoomsList.as_view(), name='available-rooms'),
+    path('api/rooms/check-availability/<int:hostel_id>/<str:room_number>/', RoomAvailabilityCheckView.as_view(), name='check-room-availability'),
+    path('available-rooms/', AvailableRoomsList.as_view(), name='available-rooms'),
 
     path('maintenances/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
     path('maintenances/<int:pk>/', MaintenanceDetailView.as_view(), name='maintenance-detail'),
@@ -56,15 +63,15 @@ urlpatterns = [
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
 
     path('api/room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list'),
-    path('api/room-description/<int:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
-    path('api/room-description/<int:pk>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
-    path('api/room-description/<int:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
+    path('api/room-descriptions/<str:hostel_name>/<str:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
 
     path('api/payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
     path('payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
     path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
 
 
