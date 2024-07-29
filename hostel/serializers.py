@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Booking, Room, Hostel, RoomDescription, Tenant, Staff, Maintenance, Facility, Payment, Notification
+from django.utils.dateparse import parse_date
 
 class HostelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,12 +38,35 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = '__all__'
 
+    def validate(self, data):
+        room = data.get('room')
+        check_in_date = data.get('check_in_date')
+        check_out_date = data.get('check_out_date')
+
+        if not room or not check_in_date or not check_out_date:
+            raise serializers.ValidationError("Room, check-in date, and check-out date are required.")
+
+        if check_in_date >= check_out_date:
+            raise serializers.ValidationError("Check-out date must be after check-in date.")
+
+        existing_bookings = Booking.objects.filter(
+            room=room,
+            check_in_date__lt=check_out_date,
+            check_out_date__gt=check_in_date
+        )
+
+        if existing_bookings.exists():
+            raise serializers.ValidationError("This room is already booked for the selected dates.")
+
+        return data
+
     def create(self, validated_data):
         booking = super().create(validated_data)
         room = booking.room
         room.status = False  # Mark room as booked
         room.save()
         return booking
+
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:

@@ -135,29 +135,6 @@ class RoomListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import Room
-from .serializers import RoomSerializer
-
-@api_view(['POST'])
-def book_room(request, room_number):
-    try:
-        room = Room.objects.get(number=room_number)
-    except Room.DoesNotExist:
-        return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    if room.is_booked:
-        return Response({'error': 'Room is already booked'}, status=status.HTTP_400_BAD_REQUEST)
-
-    room.is_booked = True
-    room.save()
-
-    serializer = RoomSerializer(room)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class RoomAvailabilityCheckView(APIView):
@@ -194,6 +171,19 @@ def check_room_availability(request):
     available = not overlapping_bookings.exists()
 
     return JsonResponse({'available': available})
+
+
+
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+
+@receiver(post_delete, sender=Booking)
+def update_room_status_on_booking_delete(sender, instance, **kwargs):
+    room = instance.room
+    # Check if there are any remaining bookings for this room
+    if not Booking.objects.filter(room=room, check_out_date__gt=timezone.now()).exists():
+        room.status = True  # Mark room as available
+        room.save()
 
 
 class RoomDetailView(APIView):
@@ -246,7 +236,8 @@ class RoomDetailByNumberView(APIView):
 
 
 # Room description views
-    
+      
+
 
 def room_description(request, room_number):
     try:
@@ -304,7 +295,7 @@ class RoomDescriptionDetailView(APIView):
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
         
 
-# hostel/views.py
+
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -493,7 +484,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-# views.py
+
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -540,6 +531,8 @@ def create_booking(request):
         return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 
 
@@ -652,12 +645,25 @@ class BookingDetailView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        booking = self.get_object(pk)
-        if booking is None:
-            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+
+def delete_booking(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        room = booking.room
         booking.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # Update room status
+        if not Booking.objects.filter(
+            room=room,
+            check_out_date__gt=timezone.now()
+        ).exists():
+            room.status = True
+            room.save()
+
+        return JsonResponse({'message': 'Booking deleted and room status updated.'})
+    except Booking.DoesNotExist:
+        return JsonResponse({'error': 'Booking not found.'}, status=404)
+
     
 
 

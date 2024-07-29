@@ -69,6 +69,8 @@ class Staff(models.Model):
     def __str__(self):
         return f"{self.name}, ({self.position})"
 
+from django.db import models
+from django.utils import timezone
 
 class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
@@ -76,23 +78,13 @@ class Booking(models.Model):
     check_in_date = models.DateField()
     check_out_date = models.DateField()
 
-    def clean(self):
-       
-        if self.check_in_date >= self.check_out_date:
-            raise ValidationError('Check-out date must be after check-in date.')
-
-        overlapping_bookings = Booking.objects.filter(
-            room=self.room,
-            check_in_date__lt=self.check_out_date,
-            check_out_date__gt=self.check_in_date
-        ).exclude(id=self.id)
-
-        if overlapping_bookings.exists():
-            raise ValidationError('This room is already booked for the selected dates.')
-
     def save(self, *args, **kwargs):
-        self.clean() 
+        # Custom save logic
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Custom delete logic if needed
+        super().delete(*args, **kwargs)
 
 
 class Maintenance(models.Model):
