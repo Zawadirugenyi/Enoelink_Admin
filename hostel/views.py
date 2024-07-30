@@ -974,3 +974,59 @@ class MpesaCallbackView(View):
         print(mpesa_body)  # For debugging
         # Process the callback data as required
         return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
+    
+import base64
+import json
+import requests
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from datetime import datetime
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@csrf_exempt
+def mpesa_payment(request):
+    phone_number = request.data.get('phone_number')
+    amount = request.data.get('amount')
+    account_reference = request.data.get('account_reference')
+    transaction_desc = request.data.get('transaction_desc')
+
+    if not all([phone_number, amount, account_reference, transaction_desc]):
+        return JsonResponse({'error': 'All fields are required'}, status=400)
+
+    # Get access token
+    access_token_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    response = requests.get(access_token_url, auth=(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET))
+    access_token = response.json().get('access_token')
+
+    # Prepare the payment request
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    password = base64.b64encode(f"{settings.MPESA_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}".encode()).decode('utf-8')
+    payload = {
+        'BusinessShortCode': settings.MPESA_SHORTCODE,
+        'Password': password,
+        'Timestamp': timestamp,
+        'TransactionType': 'CustomerPayBillOnline',
+        'Amount': amount,
+        'PartyA': phone_number,
+        'PartyB': settings.MPESA_SHORTCODE,
+        'PhoneNumber': phone_number,
+        'CallBackURL': 'https://yourdomain.com/api/payments/mpesa/callback/',
+        'AccountReference': account_reference,
+        'TransactionDesc': transaction_desc
+    }
+
+    payment_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.post(payment_url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        return JsonResponse({'message': 'Payment processed successfully'})
+    else:
+        return JsonResponse({'error': 'Payment processing failed'}, status=500)

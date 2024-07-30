@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from django.urls import path
+from .views import mpesa_payment
 from .views import RoomDescriptionDetailView
 from .views import MpesaPaymentView, MpesaCallbackView
 from .views import AvailableRoomsList
@@ -57,6 +58,7 @@ urlpatterns = [
     path('facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
 
     path('payments/', PaymentListCreateView.as_view(), name='payment-list-create'),
+    path('payments/mpesa/', mpesa_payment, name='mpesa_payment'),
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
 
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
@@ -70,8 +72,6 @@ urlpatterns = [
     path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
 
 
 
