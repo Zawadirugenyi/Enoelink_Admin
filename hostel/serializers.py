@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Booking, Room, Hostel, RoomDescription, Tenant, Staff, Maintenance, Facility, Payment, Notification
+from .models import Notification, Payment, Request
 from django.utils.dateparse import parse_date
 
 class HostelSerializer(serializers.ModelSerializer):
@@ -78,12 +79,21 @@ class FacilitySerializer(serializers.ModelSerializer):
         model = Facility
         fields = '__all__'
 
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
 
-class NotificationSerializer(serializers.ModelSerializer):
+
+class RequestSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Notification
+        model = Request
         fields = '__all__'

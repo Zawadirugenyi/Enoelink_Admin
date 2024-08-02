@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 class Hostel(models.Model):
     name = models.CharField(max_length=255)
@@ -8,9 +9,7 @@ class Hostel(models.Model):
 
     def __str__(self):
         return self.name
-    
 
-from django.db import models
 
 class Room(models.Model):
     ROOM_TYPES = (
@@ -24,10 +23,11 @@ class Room(models.Model):
     number = models.CharField(max_length=10)
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
-    status = models.BooleanField(default=True) 
+    status = models.BooleanField(default=True)  # True means available, False means occupied
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
+
 
 class Tenant(models.Model):
     name = models.CharField(max_length=100)
@@ -45,6 +45,7 @@ class Tenant(models.Model):
     def __str__(self):
         return self.name
 
+
 class RoomDescription(models.Model):
     room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name="description")
     sitting_room_image = models.ImageField(upload_to='room_description_images/', null=True, blank=True)
@@ -58,9 +59,6 @@ class RoomDescription(models.Model):
         return f'Description for Room {self.room.number}'
 
 
-
-
-
 class Staff(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="staff")
     name = models.CharField(max_length=255)
@@ -69,8 +67,6 @@ class Staff(models.Model):
     def __str__(self):
         return f"{self.name}, ({self.position})"
 
-from django.db import models
-from django.utils import timezone
 
 class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
@@ -97,9 +93,7 @@ class Maintenance(models.Model):
 
 
 class Facility(models.Model):
-    hostel = models.ForeignKey(
-        Hostel, on_delete=models.CASCADE, related_name="facilities"
-    )
+    hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="facilities")
     name = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to="facility_images/", null=True, blank=True)
@@ -109,9 +103,7 @@ class Facility(models.Model):
 
 
 class Payment(models.Model):
-    tenant = models.ForeignKey(
-        Tenant, on_delete=models.CASCADE, related_name="payments"
-    )
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
 
@@ -120,15 +112,18 @@ class Payment(models.Model):
 
 
 class Notification(models.Model):
-    tenant = models.ForeignKey(
-        Tenant,
-        on_delete=models.CASCADE,
-        related_name="notifications",
-        null=True,
-        blank=True,
-    )
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True)
     message = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'Notification for {self.tenant.name if self.tenant else "all"}: {self.message[:20]}...'
+
+
+class Request(models.Model):
+    user = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='requests')
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Request by {self.user.name} on {self.created_at}'
