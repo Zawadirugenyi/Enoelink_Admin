@@ -51,8 +51,9 @@ urlpatterns = [
     path('api/rooms/check-availability/<int:hostel_id>/<str:room_number>/', RoomAvailabilityCheckView.as_view(), name='check-room-availability'),
     path('available-rooms/', AvailableRoomsList.as_view(), name='available-rooms'),
 
-    path('maintenances/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
-    path('maintenances/<int:pk>/', MaintenanceDetailView.as_view(), name='maintenance-detail'),
+    path('maintenance/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
+    path('maintenance/<int:pk>/', MaintenanceDetailView.as_view(), name='maintenance-detail'),
+   
 
     path('facilities/', FacilityListCreateView.as_view(), name='facility-list-create'),
     path('facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),

@@ -31,7 +31,7 @@ class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = '__all__'
-        
+
 
 class StaffSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,12 +71,27 @@ class BookingSerializer(serializers.ModelSerializer):
         room.status = False  # Mark room as booked
         room.save()
         return booking
-
+    
 
 class MaintenanceSerializer(serializers.ModelSerializer):
+    room_number = serializers.CharField(write_only=True)  # Accept room_number in POST requests
+
     class Meta:
         model = Maintenance
-        fields = '__all__'
+        fields = ['id', 'room', 'room_number', 'type', 'otherType', 'description', 'completed']
+        read_only_fields = ['room']
+
+    def create(self, validated_data):
+        room_number = validated_data.pop('room_number')
+        room = Room.objects.get(number=room_number)
+        maintenance = Maintenance.objects.create(room=room, **validated_data)
+        return maintenance
+
+    def validate_room_number(self, value):
+        if not Room.objects.filter(number=value).exists():
+            raise serializers.ValidationError("Room number does not exist.")
+        return value
+
 
 class FacilitySerializer(serializers.ModelSerializer):
     class Meta:

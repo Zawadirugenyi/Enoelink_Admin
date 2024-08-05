@@ -670,6 +670,13 @@ def delete_booking(request, booking_id):
 
  # Maintenance views   
 
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .models import Maintenance
+from .serializers import MaintenanceSerializer
+
 class MaintenanceListCreateView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = MaintenanceSerializer
@@ -685,7 +692,6 @@ class MaintenanceListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class MaintenanceDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -713,6 +719,7 @@ class MaintenanceDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, pk):
         maintenance = self.get_object(pk)
