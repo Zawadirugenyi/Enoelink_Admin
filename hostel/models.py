@@ -99,7 +99,6 @@ class Maintenance(models.Model):
     def __str__(self):
         return f'{self.get_type_display()} for Room {self.room.number} - {"Completed" if self.completed else "Pending"}'
 
-
 class Facility(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="facilities")
     name = models.CharField(max_length=255)

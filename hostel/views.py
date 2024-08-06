@@ -686,12 +686,18 @@ class MaintenanceListCreateView(APIView):
         serializer = self.serializer_class(maintenances, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def post(self, request):
+    serializer = self.serializer_class(data=request.data)
+    if serializer.is_valid():
+        # Check if the room exists
+        room_id = request.data.get('room')
+        if not Room.objects.filter(id=room_id).exists():
+            return Response({'error': 'Room does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MaintenanceDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
