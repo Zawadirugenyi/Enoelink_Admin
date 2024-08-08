@@ -91,13 +91,19 @@ class Maintenance(models.Model):
     ]
 
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="maintenance")
+    room_number = models.CharField(max_length=10)
     type = models.CharField(max_length=20, choices=REQUISITION_TYPES, default='maintenance')
     otherType = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField()
     completed = models.BooleanField(default=False)
 
+    def save(self, *args, **kwargs):
+        self.room_number = self.room.number  # Ensure room_number is always in sync with room
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'{self.get_type_display()} for Room {self.room.number} - {"Completed" if self.completed else "Pending"}'
+
 
 class Facility(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="facilities")

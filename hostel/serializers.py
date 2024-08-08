@@ -74,11 +74,9 @@ class BookingSerializer(serializers.ModelSerializer):
     
 
 class MaintenanceSerializer(serializers.ModelSerializer):
-    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())  # Use PrimaryKeyRelatedField for room
-
     class Meta:
         model = Maintenance
-        fields = ['id', 'room', 'type', 'otherType', 'description', 'completed']
+        fields = ['id', 'room','room_number', 'type', 'otherType', 'description', 'completed']
 
 
 class FacilitySerializer(serializers.ModelSerializer):
