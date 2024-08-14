@@ -668,13 +668,13 @@ def delete_booking(request, booking_id):
 
 
 
- # Maintenance views   
+ # Example of correct indentation in views.py
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .models import Maintenance
+from .models import Maintenance, Room
 from .serializers import MaintenanceSerializer
 
 class MaintenanceListCreateView(APIView):
@@ -687,11 +687,25 @@ class MaintenanceListCreateView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        # Convert request.data to a mutable dictionary
+        data = dict(request.data)
+        
+        room_number = data.get('room_number')
+        try:
+            room = Room.objects.get(number=room_number)
+        except Room.DoesNotExist:
+            return Response({"error": "Room with the specified number does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Add the room ID to the data dictionary
+        data['room'] = room.id
+        
+        serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class MaintenanceDetailView(APIView):
@@ -721,14 +735,12 @@ class MaintenanceDetailView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
     def delete(self, request, pk):
         maintenance = self.get_object(pk)
         if maintenance is None:
             return Response({'error': 'Maintenance record not found'}, status=status.HTTP_404_NOT_FOUND)
         maintenance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 

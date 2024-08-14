@@ -124,6 +124,8 @@ class Payment(models.Model):
         return f"Payment of {self.amount} by {self.tenant.name} on {self.date}"
 
 
+from django.db import models
+
 class Notification(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True)
     message = models.TextField()
@@ -131,6 +133,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'Notification for {self.tenant.name if self.tenant else "all"}: {self.message[:20]}...'
+
+    @property
+    def tenant_name(self):
+        return self.tenant.name if self.tenant else "No tenant"
+
 
 
 class Request(models.Model):

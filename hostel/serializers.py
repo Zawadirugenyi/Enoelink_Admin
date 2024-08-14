@@ -73,10 +73,30 @@ class BookingSerializer(serializers.ModelSerializer):
         return booking
     
 
+from rest_framework import serializers
+from .models import Maintenance, Room
+
 class MaintenanceSerializer(serializers.ModelSerializer):
+    room_number = serializers.CharField(write_only=True)
+    
     class Meta:
         model = Maintenance
-        fields = ['id', 'room','room_number', 'type', 'otherType', 'description', 'completed']
+        fields = ['room_number', 'type', 'otherType', 'description', 'completed']
+
+    def create(self, validated_data):
+        room_number = validated_data.pop('room_number', None)
+        if room_number is None:
+            raise serializers.ValidationError("Room number must be provided.")
+        
+        try:
+            room = Room.objects.get(number=room_number)
+        except Room.DoesNotExist:
+            raise serializers.ValidationError("Room with the specified number does not exist.")
+        
+        maintenance = Maintenance.objects.create(room=room, **validated_data)
+        return maintenance
+
+
 
 
 class FacilitySerializer(serializers.ModelSerializer):
@@ -87,9 +107,14 @@ class FacilitySerializer(serializers.ModelSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
+    tenant_name = serializers.SerializerMethodField()
+    
     class Meta:
         model = Notification
-        fields = '__all__'
+        fields = ['tenant_name', 'message', 'date']
+    
+    def get_tenant_name(self, obj):
+        return obj.tenant_name
 
 
 class PaymentSerializer(serializers.ModelSerializer):
