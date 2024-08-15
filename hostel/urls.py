@@ -1,9 +1,8 @@
 from django.urls import path
 from django.conf import settings
-from django.urls import path
-from .views import mpesa_payment
 from .views import RoomDescriptionDetailView
-from .views import MpesaPaymentView, MpesaCallbackView
+from .views import lipa_na_mpesa
+from .views import lipa_na_mpesa, mpesa_callback
 from .views import AvailableRoomsList
 from .views import RoomAvailabilityCheckView
 from django.conf.urls.static import static
@@ -59,7 +58,7 @@ urlpatterns = [
     path('facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
 
     path('payments/', PaymentListCreateView.as_view(), name='payment-list-create'),
-    path('payments/mpesa/', mpesa_payment, name='mpesa_payment'),
+
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
 
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
@@ -68,11 +67,12 @@ urlpatterns = [
     path('api/room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list'),
     path('api/room-descriptions/<str:hostel_name>/<str:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
 
-    path('api/payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
-    path('payments/mpesa/', MpesaPaymentView.as_view(), name='mpesa_payment'),
-    path('payments/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa_callback'),
+    path('lipa_na_mpesa/', views.lipa_na_mpesa, name='lipa_na_mpesa'),
+    path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
 
 
 

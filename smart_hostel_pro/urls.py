@@ -8,6 +8,12 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('api/', include('hostel.urls')), 
 
+
+ # Adjust this to the correct app name
+    path('', include('hostel.urls')),  # Include the app that has the lipa_na_mpesa view
+
+
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

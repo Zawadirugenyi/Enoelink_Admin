@@ -914,139 +914,56 @@ class NotificationDetailView(APIView):
 
 
 
-CONSUMER_KEY = 'YOUR_CONSUMER_KEY'
-CONSUMER_SECRET = 'YOUR_CONSUMER_SECRET'
-SHORTCODE = 'YOUR_SHORTCODE'
-LIPA_NA_MPESA_ONLINE_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
-LIPA_NA_MPESA_ONLINE_CALLBACK_URL = 'YOUR_CALLBACK_URL'
-
-def get_mpesa_access_token():
-    consumer_key = CONSUMER_KEY
-    consumer_secret = CONSUMER_SECRET
-    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-    
-    try:
-        response = requests.get(api_url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
-        print("Access Token Request URL:", api_url)  # Debugging line
-        print("Access Token Request Headers:", response.request.headers)  # Debugging line
-        print("Access Token Response Status Code:", response.status_code)  # Debugging line
-        print("Access Token Response Text:", response.text)  # Debugging line
-        response.raise_for_status()  # Raise an error if the request was unsuccessful
-        json_response = response.json()
-        my_access_token = json_response['access_token']
-        return my_access_token
-    except requests.exceptions.RequestException as e:
-        print("Access Token Request Failed:", e)  # Debugging line
-        return None
-
-def lipa_na_mpesa_online(phone_number, amount, account_reference, transaction_desc):
-    access_token = get_mpesa_access_token()
-    if not access_token:
-        return {'error': 'Failed to obtain access token'}
-    
-    api_url = LIPA_NA_MPESA_ONLINE_URL
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    password = base64.b64encode(f'{SHORTCODE}{LIPA_NA_MPESA_ONLINE_CALLBACK_URL}{timestamp}'.encode()).decode('utf-8')
-    payload = {
-        "BusinessShortCode": SHORTCODE,
-        "Password": password,
-        "Timestamp": timestamp,
-        "TransactionType": "CustomerPayBillOnline",
-        "Amount": amount,
-        "PartyA": phone_number,
-        "PartyB": SHORTCODE,
-        "PhoneNumber": phone_number,
-        "CallBackURL": LIPA_NA_MPESA_ONLINE_CALLBACK_URL,
-        "AccountReference": account_reference,
-        "TransactionDesc": transaction_desc
-    }
-
-    try:
-        print("STK Push Request Payload:", payload)  # Debugging line
-        response = requests.post(api_url, json=payload, headers=headers)
-        print("Lipa na Mpesa Response Status Code:", response.status_code)  # Debugging line
-        print("Lipa na Mpesa Response Text:", response.text)  # Debugging line
-        response.raise_for_status()  # Raise an error if the request was unsuccessful
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print("Lipa na Mpesa Request Failed:", e)  # Debugging line
-        return {'error': str(e)}
-
-@method_decorator(csrf_exempt, name='dispatch')
-class MpesaPaymentView(View):
-    def post(self, request, *args, **kwargs):
-        phone_number = request.POST.get('phone_number')
-        amount = request.POST.get('amount')
-        account_reference = request.POST.get('account_reference')
-        transaction_desc = request.POST.get('transaction_desc')
-
-        response = lipa_na_mpesa_online(phone_number, amount, account_reference, transaction_desc)
-        return JsonResponse(response)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class MpesaCallbackView(View):
-    def post(self, request, *args, **kwargs):
-        mpesa_body = request.body.decode('utf-8')
-        print(mpesa_body)  # For debugging
-        # Process the callback data as required
-        return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
-    
-import base64
-import json
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
+import base64
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
+def get_access_token():
+    api_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
+    consumer_key = settings.MPESA_CONSUMER_KEY
+    consumer_secret = settings.MPESA_CONSUMER_SECRET
+    response = requests.get(api_url, auth=(consumer_key, consumer_secret))
+    json_response = response.json()
+    return json_response['access_token']
+
 @csrf_exempt
-def mpesa_payment(request):
-    phone_number = request.data.get('phone_number')
-    amount = request.data.get('amount')
-    account_reference = request.data.get('account_reference')
-    transaction_desc = request.data.get('transaction_desc')
+def lipa_na_mpesa(request):
+    if request.method == 'POST':
+        token = get_access_token()
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        password_str = f"{settings.MPESA_BUSINESS_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}"
+        password = base64.b64encode(password_str.encode()).decode()
 
-    if not all([phone_number, amount, account_reference, transaction_desc]):
-        return JsonResponse({'error': 'All fields are required'}, status=400)
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        }
+        api_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
+        payload = {
+            'BusinessShortCode': settings.MPESA_BUSINESS_SHORTCODE,
+            'Password': password,
+            'Timestamp': timestamp,
+            'TransactionType': 'CustomerPayBillOnline',
+            'Amount': 1,  # Replace with the actual amount
+            'PartyA': settings.MPESA_PHONE_NUMBER,
+            'PartyB': settings.MPESA_BUSINESS_SHORTCODE,  # Typically same as BusinessShortCode
+            'PhoneNumber': settings.MPESA_PHONE_NUMBER,
+            'CallBackURL': 'https://yourdomain.com/mpesa/callback/',
+            'AccountReference': 'AccountReference',
+            'TransactionDesc': 'Payment for testing'
+        }
+        response = requests.post(api_url, json=payload, headers=headers)
+        return JsonResponse(response.json())
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
-    # Get access token
-    access_token_url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
-    response = requests.get(access_token_url, auth=(settings.MPESA_CONSUMER_KEY, settings.MPESA_CONSUMER_SECRET))
-    access_token = response.json().get('access_token')
-
-    # Prepare the payment request
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    password = base64.b64encode(f"{settings.MPESA_SHORTCODE}{settings.MPESA_PASSKEY}{timestamp}".encode()).decode('utf-8')
-    payload = {
-        'BusinessShortCode': settings.MPESA_SHORTCODE,
-        'Password': password,
-        'Timestamp': timestamp,
-        'TransactionType': 'CustomerPayBillOnline',
-        'Amount': amount,
-        'PartyA': phone_number,
-        'PartyB': settings.MPESA_SHORTCODE,
-        'PhoneNumber': phone_number,
-        'CallBackURL': 'https://yourdomain.com/api/payments/mpesa/callback/',
-        'AccountReference': account_reference,
-        'TransactionDesc': transaction_desc
-    }
-
-    payment_url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }
-    response = requests.post(payment_url, json=payload, headers=headers)
-
-    if response.status_code == 200:
-        return JsonResponse({'message': 'Payment processed successfully'})
-    else:
-        return JsonResponse({'error': 'Payment processing failed'}, status=500)
+@csrf_exempt
+def mpesa_callback(request):
+    if request.method == 'POST':
+        data = request.body.decode('utf-8')
+        # Process callback data here
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'error': 'Invalid request'}, status=400)

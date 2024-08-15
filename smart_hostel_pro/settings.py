@@ -241,8 +241,14 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": False
 }
 
-
-MPESA_CONSUMER_KEY = 'your_consumer_key'
-MPESA_CONSUMER_SECRET = 'your_consumer_secret'
-MPESA_SHORTCODE = 'your_shortcode'
-MPESA_PASSKEY = 'your_passkey'
+# M-Pesa credentials
+MPESA_CONSUMER_KEY = 'DfAy4oTzV3ftHU5Liwzye8lvekESqbHO2eSnn7fCcrLtgYYG'
+MPESA_CONSUMER_SECRET = '6zkwowmag4NoHPHwrqRk40fVVSqe2J3OlH9mMnS54V1Tlam8ijT7IyHPGWpwPA7l'
+MPESA_INITIATOR_NAME = 'testapi'
+MPESA_INITIATOR_PASSWORD = 'Safaricom999!!'
+MPESA_SHORTCODE = '600999'  # Example shortcode, replace if different
+MPESA_PARTY_A = '600999'  # Party A (the payee)
+MPESA_PARTY_B = '600000'  # Party B (the payee shortcode)
+MPESA_PHONE_NUMBER = '254114552724'  # Your phone number for testing
+MPESA_BUSINESS_SHORTCODE = '174379'
+MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
