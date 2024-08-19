@@ -19,6 +19,7 @@ from .models import Room, Booking
 from .serializers import BookingSerializer
 import datetime
 import base64
+
 from django.http import JsonResponse
 from django.views import View
 from rest_framework import generics
@@ -60,9 +61,12 @@ def user_request_requisition(request):
 
 
 # Hostel views
-    
+from rest_framework.permissions import IsAuthenticated
+
+
 class HostelListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
+    serializer_class = HostelSerializer
     serializer_class = HostelSerializer
 
     def get(self, request):
@@ -116,9 +120,12 @@ class HostelDetailView(APIView):
 
 
 # Room views
-
+   
 class RoomListCreateView(APIView):
     permission_classes = [IsAuthenticated] 
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get(self, request):
@@ -187,7 +194,7 @@ def update_room_status_on_booking_delete(sender, instance, **kwargs):
 
 
 class RoomDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get_object(self, pk):
@@ -222,7 +229,7 @@ class RoomDetailView(APIView):
 
 
 class RoomDetailByNumberView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
     def get(self, request, room_number):
@@ -254,7 +261,7 @@ def room_description(request, room_number):
 
         
 class RoomDescriptionListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated] 
     serializer_class = RoomDescriptionSerializer
 
     def get(self, request):
@@ -354,12 +361,17 @@ class RoomDescriptionDetailView(APIView):
 
 
 
+
+
+
+
+
+
 # Tenant views
     
 class TenantListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    serializer_class = TenantSerializer
     permission_classes = [IsAuthenticated]
+    serializer_class = TenantSerializer
 
     def get(self, request):
         tenants = Tenant.objects.all()
@@ -377,9 +389,8 @@ class TenantListCreateView(APIView):
 class TenantDetailView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TenantSerializer
-       
 
-    def get_object(self, pk,  format=None):
+    def get_object(self, pk):
         try:
             return Tenant.objects.get(pk=pk)
         except Tenant.DoesNotExist:
@@ -408,7 +419,6 @@ class TenantDetailView(APIView):
             return Response({'error': 'Tenant not found'}, status=status.HTTP_404_NOT_FOUND)
         tenant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 # Staff views
     
@@ -468,7 +478,7 @@ class StaffDetailView(APIView):
       
 
 class BookingListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
 
     def get_queryset(self):
@@ -668,7 +678,6 @@ def delete_booking(request, booking_id):
 
 
 
- # Example of correct indentation in views.py
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -678,7 +687,7 @@ from .models import Maintenance, Room
 from .serializers import MaintenanceSerializer
 
 class MaintenanceListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = MaintenanceSerializer
 
     def get(self, request):
@@ -709,7 +718,7 @@ class MaintenanceListCreateView(APIView):
 
 
 class MaintenanceDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = MaintenanceSerializer
 
     def get_object(self, pk):
@@ -860,7 +869,7 @@ class PaymentDetailView(APIView):
 # Notifi views
     
 class NotificationListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
 
     def get(self, request):
@@ -909,9 +918,6 @@ class NotificationDetailView(APIView):
             return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
         notification.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-
 
 
 # views.py
@@ -967,3 +973,23 @@ def mpesa_callback(request):
         # Process callback data here
         return JsonResponse({'status': 'success'})
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# hostel/views.py
+
+from django.shortcuts import HttpResponse
+import matplotlib.pyplot as plt
+from io import BytesIO
+
+def generate_plot(request):
+    # Example function to generate a plot
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [4, 5, 6])
+    ax.set_title('Sample Plot')
+
+    # Create a BytesIO buffer and save the plot to it
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+
+    return HttpResponse(buffer, content_type='image/png')

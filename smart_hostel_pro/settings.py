@@ -93,6 +93,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -112,7 +113,7 @@ LOGGING = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -124,7 +125,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'smart_hostel_pro.wsgi.application'
 
 ASGI_APPLICATION = 'your_project_name.asgi.application'
@@ -175,6 +175,9 @@ DEBUG = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 STATIC_URL = '/static/'
 
 # Define the directory where collectstatic will gather static files for deployment
@@ -242,8 +245,8 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # M-Pesa credentials
-MPESA_CONSUMER_KEY = 'DfAy4oTzV3ftHU5Liwzye8lvekESqbHO2eSnn7fCcrLtgYYG'
-MPESA_CONSUMER_SECRET = '6zkwowmag4NoHPHwrqRk40fVVSqe2J3OlH9mMnS54V1Tlam8ijT7IyHPGWpwPA7l'
+MPESA_CONSUMER_KEY = 'sWd3AyHwAgc4TApMoh5HBMySmsv0lXGO55ce1aOKq6EI6WHI'
+MPESA_CONSUMER_SECRET = 'gMjyzZmxlktCIkqH3JNZoJG6r8bzclpTSAHR0Xdhd4V22QoUwlFWvQXGN4uKuyoR'
 MPESA_INITIATOR_NAME = 'testapi'
 MPESA_INITIATOR_PASSWORD = 'Safaricom999!!'
 MPESA_SHORTCODE = '600999'  # Example shortcode, replace if different
@@ -252,3 +255,14 @@ MPESA_PARTY_B = '600000'  # Party B (the payee shortcode)
 MPESA_PHONE_NUMBER = '254114552724'  # Your phone number for testing
 MPESA_BUSINESS_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
+EMAIL_HOST_PASSWORD = 'yfzx npwn hony nkjs'  # Or app password
+
+# settings.py
+

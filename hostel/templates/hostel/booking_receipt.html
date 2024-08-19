@@ -1,0 +1,20 @@
+<!-- templates/my_app/booking_receipt.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Booking Receipt</title>
+</head>
+
+<body>
+    <h1>Booking Confirmation</h1>
+    <p>Dear {{ user.username }},</p>
+    <p>Thank you for your booking!</p>
+    <p>Your booking number is: <strong>{{ booking.id }}</strong></p>
+    <p>Room Number: {{ booking.room.number }}</p>
+    <p>Check-in Date: {{ booking.check_in_date }}</p>
+    <p>Check-out Date: {{ booking.check_out_date }}</p>
+    <p>Best regards,<br>Your Hostel Team</p>
+</body>
+
+</html>

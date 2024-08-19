@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from .views import RoomDescriptionDetailView
+from .views import generate_plot
 from .views import lipa_na_mpesa
 from .views import lipa_na_mpesa, mpesa_callback
 from .views import AvailableRoomsList
@@ -69,8 +70,12 @@ urlpatterns = [
 
     path('lipa_na_mpesa/', views.lipa_na_mpesa, name='lipa_na_mpesa'),
     path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
+
+    path('plot/', generate_plot, name='generate_plot'),
+    
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
