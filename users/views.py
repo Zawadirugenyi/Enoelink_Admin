@@ -108,19 +108,53 @@ class LoginUserView(APIView):
 
         return Response(response_content, status=status.HTTP_400_BAD_REQUEST)
 
-
 class LogoutUserView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
+    def post(self, request):
         user = request.user
 
-        token = Token.objects.get(user=user)
-        token.delete()
+        try:
+            token = Token.objects.get(user=user)
+            token.delete()
+            # Replace 'username' with the appropriate attribute, e.g., 'email' if 'username' does not exist
+            print(f'Token for user {user.email} successfully deleted.')
+        except Token.DoesNotExist:
+            return Response({'status': False, 'message': 'No active session found.'}, status=status.HTTP_400_BAD_REQUEST)
 
         response_content = {
             'status': True,
             'message': 'User logged out successfully.'
         }
 
-        return Response(response_content, status=status.HTTP_202_ACCEPTED)
+        return Response(response_content, status=status.HTTP_200_OK)
+
+
+ # users/views.py
+    # users/views.py
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+# users/views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+import json
+
+User = get_user_model()
+
+@csrf_exempt
+def check_user(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            first_name = data.get('first_name')
+            email = data.get('email')
+
+            user_exists = User.objects.filter(first_name=first_name, email=email).exists()
+            return JsonResponse({'exists': user_exists})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+

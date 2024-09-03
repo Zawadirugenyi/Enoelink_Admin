@@ -2,14 +2,28 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+# hostel/models.py
+from django.db import models
+
 class Hostel(models.Model):
     name = models.CharField(max_length=255)
-    address = models.CharField(max_length=255)
-    image = models.ImageField(upload_to="hostel_images/", null=True, blank=True)
+
+    # Other fields...
 
     def __str__(self):
         return self.name
 
+
+class Hostel(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    image = models.ImageField(upload_to="hostel_images/", null=True, blank=True)
+    
+    def __str__(self):
+        return self.name
+
+
+ 
 
 class Room(models.Model):
     ROOM_TYPES = (
@@ -24,6 +38,9 @@ class Room(models.Model):
     room_type = models.CharField(max_length=50, choices=ROOM_TYPES, default="bedsitter")
     image = models.ImageField(upload_to="room_images/", null=True, blank=True)
     status = models.BooleanField(default=True)  # True means available, False means occupied
+
+    # Reference to Tenant
+    tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE, related_name='rooms', null=True, blank=True)
 
     def __str__(self):
         return f"Room {self.number} ({self.get_room_type_display()}) in {self.hostel.name}"
@@ -69,7 +86,7 @@ class Staff(models.Model):
 
 
 class Booking(models.Model):
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     check_in_date = models.DateField()
     check_out_date = models.DateField()
@@ -81,6 +98,15 @@ class Booking(models.Model):
     def delete(self, *args, **kwargs):
         # Custom delete logic if needed
         super().delete(*args, **kwargs)
+
+    @classmethod
+    def get_room_by_tenant_and_booking(cls, tenant_id, booking_id):
+        try:
+            booking = cls.objects.get(id=booking_id, tenant_id=tenant_id)
+            return booking.room
+        except cls.DoesNotExist:
+            return None
+
 
 
 class Maintenance(models.Model):

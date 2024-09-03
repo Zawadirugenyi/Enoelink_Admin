@@ -93,6 +93,8 @@ REST_FRAMEWORK = {
     ],
 }
 
+# settings.py
+AUTH_USER_MODEL = 'users.User'
 
 LOGGING = {
     'version': 1,

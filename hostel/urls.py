@@ -8,6 +8,7 @@ from .views import AvailableRoomsList
 from .views import RoomAvailabilityCheckView
 from django.conf.urls.static import static
 from . import views
+from .views import TenantListCreateView, TenantCheckView, TenantDetailView
 from .views import book_room
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import RoomListCreateView, RoomDescriptionListCreateView, RoomDetailView, RoomDescriptionDetailView
@@ -20,6 +21,7 @@ from .views import (
     MaintenanceListCreateView, MaintenanceDetailView,
     FacilityListCreateView, FacilityDetailView,
     PaymentListCreateView, PaymentDetailView,
+    
     NotificationListCreateView, NotificationDetailView,
     admin_send_notification, user_request_requisition,
     RoomDescriptionDetailView, RoomDescriptionListCreateView,  # Add RoomDescriptionListCreateView
@@ -34,13 +36,19 @@ urlpatterns = [
     path('hostels/<int:pk>/', HostelDetailView.as_view(), name='hostel-detail'),
 
     path('rooms/', RoomListCreateView.as_view(), name='room-list-create'),
-     path('api/room-descriptions/<int:room_number>/description/', views.room_description, name='room-description'),
+    
+    path('api/room-descriptions/<int:room_number>/description/', views.room_description, name='room-description'),
     path('room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list-create'),
     path('rooms/<int:pk>/', RoomDetailView.as_view(), name='room-detail'),
     path('book-room/<str:room_number>/', book_room, name='book_room'),
 
-    path('tenants/', TenantListCreateView.as_view(), name='tenant-list-create'),
-    path('tenants/<int:pk>/', TenantDetailView.as_view(), name='tenant-detail'),
+
+    
+
+    path('api/tenants/', TenantListCreateView.as_view(), name='tenant-list-create'),
+    path('api/tenants/check/', TenantCheckView.as_view(), name='tenant-check'),
+    path('api/tenants/<int:pk>/', TenantDetailView.as_view(), name='tenant-detail'),
+
 
     path('staffs/', StaffListCreateView.as_view(), name='staff-list-create'),
     path('staffs/<int:pk>/', StaffDetailView.as_view(), name='staff-detail'),
@@ -70,6 +78,7 @@ urlpatterns = [
 
     path('lipa_na_mpesa/', views.lipa_na_mpesa, name='lipa_na_mpesa'),
     path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('api/tenants/check/', TenantCheckView.as_view(), name='tenant-check'),
 
     path('plot/', generate_plot, name='generate_plot'),
     

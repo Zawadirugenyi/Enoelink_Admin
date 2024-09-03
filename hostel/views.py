@@ -134,6 +134,7 @@ class RoomListCreateView(APIView):
         if hostel_name:
             rooms = rooms.filter(hostel__name=hostel_name)
         serializer = self.serializer_class(rooms, many=True)
+        print(rooms)
         return Response(serializer.data)
 
     def post(self, request):
@@ -369,6 +370,14 @@ class RoomDescriptionDetailView(APIView):
 
 # Tenant views
     
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Tenant
+from .serializers import TenantSerializer
+from django.http import JsonResponse
+
 class TenantListCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TenantSerializer
@@ -384,6 +393,34 @@ class TenantListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_tenant_by_name(self, name):
+        try:
+            return Tenant.objects.get(name=name)
+        except Tenant.DoesNotExist:
+            return None
+
+
+class TenantCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        name = request.data.get('name', '')
+        
+        if name:
+            tenant = self.get_tenant_by_name(name)
+            if tenant:
+                serializer = TenantSerializer(tenant)
+                return Response({'exists': True, 'tenant': serializer.data})
+            return Response({'exists': False}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({'error': 'Name parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_tenant_by_name(self, name):
+        try:
+            return Tenant.objects.get(name=name)
+        except Tenant.DoesNotExist:
+            return None
 
 
 class TenantDetailView(APIView):
@@ -420,6 +457,23 @@ class TenantDetailView(APIView):
         tenant.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
+class TenantBookingListView(View):
+    def get(self, request, *args, **kwargs):
+        tenant_id = request.GET.get('tenant_id')
+        if not tenant_id:
+            return JsonResponse({'error': 'Tenant ID is required'}, status=400)
+
+        try:
+            bookings = Booking.objects.filter(tenant_id=tenant_id)
+            bookings_data = list(bookings.values('room__number', 'check_in_date', 'check_out_date'))
+            return JsonResponse({'bookings': bookings_data})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+
 # Staff views
     
 class StaffListCreateView(APIView):
@@ -437,6 +491,7 @@ class StaffListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class StaffDetailView(APIView):
@@ -606,6 +661,9 @@ def book_room(request):
 
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'})
+
+
+
 
 
 def available_rooms(request):
@@ -993,3 +1051,45 @@ def generate_plot(request):
     buffer.seek(0)
 
     return HttpResponse(buffer, content_type='image/png')
+
+
+
+
+
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import Booking, Room
+from .serializers import BookingSerializer
+from django.utils import timezone
+
+class BookRoomView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
+
+    def post(self, request):
+        user = request.user
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            room_id = serializer.validated_data['room_id']
+            room = Room.objects.get(id=room_id)
+            if room.is_booked:
+                return Response({'error': 'Room is already booked'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save(user=user)
+            room.is_booked = True
+            room.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UserBookingsView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
+
+    def get(self, request):
+        user = request.user
+        bookings = Booking.objects.filter(user=user)
+        serializer = self.serializer_class(bookings, many=True)
+        return Response(serializer.data)
+        
