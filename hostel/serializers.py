@@ -97,24 +97,68 @@ class MaintenanceSerializer(serializers.ModelSerializer):
         return maintenance
 
 
+from rest_framework import serializers
+from .models import Facility, FacilityRegistration
+
 
 
 class FacilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Facility
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'image', 'contact_info', 'interaction_type']
+
+
+from rest_framework import serializers
+from .models import Facility, FacilityRegistration
+
+class FacilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Facility
+        fields = ['id', 'name', 'description', 'image', 'contact_name', 'contact_email', 'contact_phone', 'interaction_type']
+
+from rest_framework import serializers
+from .models import FacilityRegistration, Tenant, Facility
+
+
+class FacilityRegistrationSerializer(serializers.ModelSerializer):
+    tenant = serializers.PrimaryKeyRelatedField(queryset=Tenant.objects.all())  # Use PrimaryKeyRelatedField
+
+    class Meta:
+        model = FacilityRegistration
+        fields = ['facility', 'tenant', 'registration_token']
+        read_only_fields = ['registration_token']
+
+    def create(self, validated_data):
+        facility = validated_data.pop('facility')
+        tenant = validated_data.pop('tenant')
+
+        # Check if a registration already exists for this facility and tenant
+        existing_registration = FacilityRegistration.objects.filter(facility=facility, tenant=tenant).first()
+        if existing_registration:
+            return existing_registration  # Return existing registration if it exists
+
+        registration = FacilityRegistration.objects.create(
+            facility=facility,
+            tenant=tenant,
+            **validated_data
+        )
+        registration.generate_token()
+        return registration
+
+
 
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     tenant_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Notification
-        fields = ['tenant_name', 'message', 'date']
-    
+        fields = ['id', 'tenant_name', 'message', 'date']  # Add 'id' field
+
     def get_tenant_name(self, obj):
-        return obj.tenant_name
+        return obj.tenant_name  # This calls the tenant_name property from the model
+
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -127,3 +171,22 @@ class RequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = '__all__'
+
+
+        from rest_framework import serializers
+from .models import Event
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['id', 'title', 'description', 'date', 'location', 'image', 'rvp_file', 'likes']
+
+
+from rest_framework import serializers
+from .models import RVPDownload
+
+class RVPDownloadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RVPDownload
+        fields = ['id', 'event', 'tenant', 'downloaded_at']
+

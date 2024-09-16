@@ -2,11 +2,19 @@ from django.urls import path
 from django.conf import settings
 from .views import RoomDescriptionDetailView
 from .views import generate_plot
-from .views import lipa_na_mpesa
+from .views import GenerateBypassCodeView, VerifyBypassCodeView
+from .views import check_email
+from .views import RVPDownloadCreateView
+from .views import FacilityListCreateView, FacilityDetailView
 from .views import lipa_na_mpesa, mpesa_callback
 from .views import AvailableRoomsList
 from .views import RoomAvailabilityCheckView
+from .views import FacilityListCreateView, FacilityDetailView, FacilityRegistrationView
 from django.conf.urls.static import static
+from django.urls import path
+from .views import EventListCreateView, EventDetailView
+from .views import FacilityListCreateView, FacilityDetailView
+from .views import FacilityListCreateView, FacilityDetailView
 from . import views
 from .views import TenantListCreateView, TenantCheckView, TenantDetailView
 from .views import book_room
@@ -43,8 +51,6 @@ urlpatterns = [
     path('book-room/<str:room_number>/', book_room, name='book_room'),
 
 
-    
-
     path('api/tenants/', TenantListCreateView.as_view(), name='tenant-list-create'),
     path('api/tenants/check/', TenantCheckView.as_view(), name='tenant-check'),
     path('api/tenants/<int:pk>/', TenantDetailView.as_view(), name='tenant-detail'),
@@ -66,12 +72,18 @@ urlpatterns = [
     path('facilities/', FacilityListCreateView.as_view(), name='facility-list-create'),
     path('facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
 
+    path('api/facilities/', FacilityListCreateView.as_view(), name='facility-list-create'),
+    path('api/facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
+    path('api/register_facility/', FacilityRegistrationView.as_view(), name='register_facility'),
+
+
     path('payments/', PaymentListCreateView.as_view(), name='payment-list-create'),
 
     path('payments/<int:pk>/', PaymentDetailView.as_view(), name='payment-detail'),
 
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
     path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
+    
 
     path('api/room-descriptions/', RoomDescriptionListCreateView.as_view(), name='room-description-list'),
     path('api/room-descriptions/<str:hostel_name>/<str:room_number>/', RoomDescriptionDetailView.as_view(), name='room-description-detail'),
@@ -79,12 +91,20 @@ urlpatterns = [
     path('lipa_na_mpesa/', views.lipa_na_mpesa, name='lipa_na_mpesa'),
     path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
     path('api/tenants/check/', TenantCheckView.as_view(), name='tenant-check'),
+    path('api/tenants/check-email/', check_email, name='check_email'),
+    path('api/send-bypass-code/', GenerateBypassCodeView.as_view(), name='send-bypass_code'),
+    path('verify-bypass-code/', VerifyBypassCodeView.as_view(), name='verify_bypass_code'),
+
+
+    path('api/events/', EventListCreateView.as_view(), name='event-list-create'),
+    path('api/events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    path('api/rvp-downloads/', RVPDownloadCreateView.as_view(), name='rvp_download_create'),
 
     path('plot/', generate_plot, name='generate_plot'),
+   
     
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 
 
 

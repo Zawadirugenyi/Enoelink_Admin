@@ -19,13 +19,10 @@ from .models import Room, Booking
 from .serializers import BookingSerializer
 import datetime
 import base64
-
 from django.http import JsonResponse
 from django.views import View
 from rest_framework import generics
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from .utils import lipa_na_mpesa_online
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -813,17 +810,24 @@ class MaintenanceDetailView(APIView):
 
 
 
-# Facility views
-    
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Facility, FacilityRegistration, Tenant
+from .serializers import FacilitySerializer, FacilityRegistrationSerializer
+
 class FacilityListCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = FacilitySerializer
 
+    # Retrieve the list of all facilities
     def get(self, request):
         facilities = Facility.objects.all()
         serializer = self.serializer_class(facilities, many=True)
         return Response(serializer.data)
 
+    # Create a new facility
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -832,39 +836,91 @@ class FacilityListCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class FacilityDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = FacilitySerializer
 
+    # Helper method to retrieve a facility by its primary key
     def get_object(self, pk):
         try:
             return Facility.objects.get(pk=pk)
         except Facility.DoesNotExist:
             return None
 
+    # Retrieve details of a specific facility
     def get(self, request, pk):
         facility = self.get_object(pk)
         if facility is None:
             return Response({'error': 'Facility not found'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.serializer_class(facility)
-        return Response(serializer.data)
 
+        # Check if the facility requires tenant registration
+        if facility.interaction_type == Facility.REGISTER:
+            # Get tenant registration for this facility
+            tenant = request.user.tenant  # Assuming user is linked to a tenant
+            try:
+                registration = FacilityRegistration.objects.get(facility=facility, tenant=tenant)
+                registration_serializer = FacilityRegistrationSerializer(registration)
+                return Response({
+                    'facility': self.serializer_class(facility).data,
+                    'registration': registration_serializer.data
+                })
+            except FacilityRegistration.DoesNotExist:
+                return Response({
+                    'facility': self.serializer_class(facility).data,
+                    'message': 'You need to register for this facility'
+                })
+        
+        # If it's a contact-type facility, show contact info
+        elif facility.interaction_type == Facility.CONTACT:
+            return Response(self.serializer_class(facility).data)
+        
+        return Response(self.serializer_class(facility).data)
+
+    # Update an existing facility
     def put(self, request, pk):
         facility = self.get_object(pk)
         if facility is None:
             return Response({'error': 'Facility not found'}, status=status.HTTP_404_NOT_FOUND)
+
         serializer = self.serializer_class(facility, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Delete a facility
     def delete(self, request, pk):
         facility = self.get_object(pk)
         if facility is None:
             return Response({'error': 'Facility not found'}, status=status.HTTP_404_NOT_FOUND)
+
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
+from .models import FacilityRegistration
+from .serializers import FacilityRegistrationSerializer
+
+class FacilityRegistrationView(APIView):
+    permission_classes = [IsAuthenticated]  # Require authentication
+
+    def post(self, request, *args, **kwargs):
+        serializer = FacilityRegistrationSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            try:
+                registration = serializer.save()
+                return Response({
+                    "registration_token": registration.registration_token
+                }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 
@@ -924,8 +980,13 @@ class PaymentDetailView(APIView):
 
 
 
-# Notifi views
-    
+# Notifi viewsfrom rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from .models import Notification
+from .serializers import NotificationSerializer
+
 class NotificationListCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
@@ -941,10 +1002,15 @@ class NotificationListCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from .models import Notification
+from .serializers import NotificationSerializer
 
 class NotificationDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
 
     def get_object(self, pk):
@@ -976,6 +1042,28 @@ class NotificationDetailView(APIView):
             return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
         notification.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import Notification
+from .serializers import NotificationSerializer
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['patch'])
+    def mark_as_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.read = True
+        notification.save()
+        return Response({'status': 'notification marked as read'}, status=status.HTTP_200_OK)
+
+
+
 
 
 # views.py
@@ -1092,4 +1180,236 @@ class UserBookingsView(APIView):
         bookings = Booking.objects.filter(user=user)
         serializer = self.serializer_class(bookings, many=True)
         return Response(serializer.data)
+    
+
+
+
+
+
+    from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .models import Event
+from .serializers import EventSerializer
+import logging
+
+logger = logging.getLogger(__name__)
+
+class EventListCreateView(APIView):
+    def get(self, request):
+        try:
+            events = Event.objects.all()
+            serializer = EventSerializer(events, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching events: {e}")
+            return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        try:
+            serializer = EventSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error creating event: {e}")
+            return Response({'error': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class EventDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = EventSerializer
+
+    def get_object(self, pk):
+        """
+        Helper method to get the object with the given pk
+        """
+        try:
+            return Event.objects.get(pk=pk)
+        except Event.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        """
+        Retrieve an event by its ID
+        """
+        event = self.get_object(pk)
+        if event is None:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(event)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        """
+        Update an event by its ID
+        """
+        event = self.get_object(pk)
+        if event is None:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(event, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        """
+        Delete an event by its ID
+        """
+        event = self.get_object(pk)
+        if event is None:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        event.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .models import RVPDownload, Event, Tenant
+from .serializers import RVPDownloadSerializer
+import logging
+
+logger = logging.getLogger(__name__)
+
+class RVPDownloadCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        event_id = request.data.get('event')
+        tenant_name = request.data.get('tenant_name')  # Ensure 'tenant_name' is used
+
+        if not event_id:
+            return Response({'error': 'Event ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not tenant_name:
+            return Response({'error': 'Tenant name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the event exists
+        try:
+            event = Event.objects.get(id=event_id)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the tenant exists
+        try:
+            tenant = Tenant.objects.get(name=tenant_name)
+        except Tenant.DoesNotExist:
+            return Response({'error': 'Tenant does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the tenant has already downloaded the RVP for this event
+        if RVPDownload.objects.filter(event=event, tenant=tenant).exists():
+            return Response({'error': 'RVP for this event has already been downloaded by this tenant'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate RVP PDF with tenant's name
+        if not event.rvp_file:
+            event.rvp_file = event.create_default_rvp(tenant_name=tenant_name)
+            event.save()
+
+        # Prepare data for the serializer
+        data = {
+            'event': event_id,
+            'tenant': tenant.id
+        }
+
+        serializer = RVPDownloadSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['POST'])
+def send_bypass_email(request):
+    email = request.data.get('email')
+    if email:
+        # Logic to send bypass code via email
+        return Response({"message": "Bypass code sent successfully."})
+    else:
+        return JsonResponse({"error": "Email not provided."}, status=400)
+    
+    from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Tenant  # Make sure to import your Tenant model
+import json
+
+@csrf_exempt
+def check_email(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
         
+        if Tenant.objects.filter(email=email).exists():
+            return JsonResponse({'exists': True}, status=200)
+        else:
+            return JsonResponse({'exists': False}, status=404)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+import random
+import string
+from django.core.cache import cache
+from django.core.mail import send_mail
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class GenerateBypassCodeView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'detail': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        print(f"Received request to generate bypass code for email: {email}")
+
+        # Generate a 6-digit bypass code
+        bypass_code = ''.join(random.choices(string.digits, k=6))
+        print(f"Generated bypass code: {bypass_code}")
+
+        # Store the bypass code in cache (with expiration)
+        cache.set(f'bypass_code_{email}', bypass_code, timeout=60)  # Timeout in seconds
+        print(f"Stored bypass code in cache with key: bypass_code_{email}")
+
+        # Send bypass code to the email
+        send_mail(
+            'Your Bypass Code',
+            f'Your bypass code is {bypass_code}. It will expire in 1 minute.',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        print(f"Sent bypass code to email: {email}")
+
+        return Response({'status': 'success', 'message': 'Bypass code sent successfully'}, status=status.HTTP_200_OK)
+
+class VerifyBypassCodeView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        bypass_code = request.data.get('bypass_code')
+
+        if not email or not bypass_code:
+            return Response({'detail': 'Email and bypass code are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        stored_code = cache.get(f'bypass_code_{email}')
+
+        if stored_code is None:
+            return Response({'detail': 'Bypass code not found or expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if stored_code == bypass_code:
+            cache.delete(f'bypass_code_{email}')
+            return Response({'status': 'success', 'message': 'Bypass code verified successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Invalid bypass code.'}, status=status.HTTP_400_BAD_REQUEST)

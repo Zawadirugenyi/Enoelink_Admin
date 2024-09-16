@@ -158,3 +158,46 @@ def check_user(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.core.mail import send_mail, BadHeaderError
+from django.conf import settings
+from django.utils.crypto import get_random_string
+from users.models import User
+
+class SendBypassCodeView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({'status': False, 'message': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'status': False, 'message': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate a random bypass code
+        bypass_code = get_random_string(6, allowed_chars='1234567890')
+
+        # You can save the bypass code to the user model or send it directly.
+        # For simplicity, we are only sending the email here.
+        
+        try:
+            send_mail(
+                'Your Bypass Code',
+                f'Hello {user.first_name},\n\nYour bypass code is: {bypass_code}\n\nBest regards,\nSmartHostelPro Team',
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently=False,
+            )
+        except BadHeaderError:
+            return Response({'status': False, 'message': 'Invalid header found in email.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'status': False, 'message': f'Failed to send bypass code email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'status': True, 'message': 'Bypass code sent successfully'}, status=status.HTTP_200_OK)

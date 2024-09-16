@@ -89,3 +89,84 @@ def generate_pdf_from_html(html_content):
     if pdf.err:
         return None
     return result.getvalue()
+
+
+
+
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.lib import colors
+import os
+import random
+
+def create_default_rvp(self, tenant_name):
+        # Use tenant_name directly without encoding it
+        tenant_name = tenant_name if tenant_name else "Unknown Tenant"
+
+        # Create a PDF with event details
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        content = []
+
+        # Teal Color Scheme
+        teal = colors.HexColor('#008080')
+        light_teal = colors.HexColor('#20B2AA')
+        dark_teal = colors.HexColor('#004d40')
+        light_background = colors.HexColor('#e0f2f1')
+        teal_text = colors.HexColor('#004d40')
+
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        title_style.textColor = teal
+        body_style = styles['BodyText']
+        body_style.textColor = teal_text
+        conclusion_style = ParagraphStyle(
+            name='ConclusionStyle',
+            fontSize=10,
+            alignment=1,
+            spaceAfter=20,
+            textColor=teal_text
+        )
+
+        # Title
+        content.append(Paragraph(f"Event Ticket: {self.title}", title_style))
+
+        # Serial Number
+        serial_number = f"Serial Number: {random.randint(100000, 999999)}"
+        content.append(Paragraph(serial_number, body_style))
+
+        # Event and Tenant Details
+        details = [
+            ["Tenant Name:", tenant_name],  # Use tenant_name directly
+            ["Event Title:", self.title],
+            ["Date:", self.date.strftime("%A, %B %d, %Y")],
+            ["Location:", self.location],
+            ["Description:", Paragraph(self.description, body_style)],
+        ]
+
+        # Table with adjusted column width for the description
+        table = Table(details, colWidths=[120, 440])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), dark_teal),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), light_background),
+            ('GRID', (0, 0), (-1, -1), 1, dark_teal),
+        ]))
+
+        content.append(table)
+
+        # Conclusion
+        content.append(Paragraph("Thank you for joining us. We look forward to seeing you at the event!", conclusion_style))
+
+        # Build PDF
+        doc.build(content)
+        buffer.seek(0)
+
+        # Create a unique filename for the PDF, using tenant_name directly
+        file_name = f"{self.title.replace(' ', '_')}_{tenant_name.replace(' ', '_')}_{random.randint(1000, 9999)}.pdf"
+        return ContentFile(buffer.read(), file_name)

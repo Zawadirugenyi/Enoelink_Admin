@@ -24,6 +24,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CORS_ALLOW_ALL_ORIGINS = True
+
 # Application definition
 INSTALLED_APPS = [
 
@@ -67,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
 ]
@@ -75,6 +78,14 @@ CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',
 ]
+
+# settings.py
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
 
 ROOT_URLCONF = 'smart_hostel_pro.urls'
 
@@ -198,6 +209,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 JAZZMIN_SETTINGS = {
@@ -247,6 +260,7 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # M-Pesa credentials
+
 MPESA_CONSUMER_KEY = 'sWd3AyHwAgc4TApMoh5HBMySmsv0lXGO55ce1aOKq6EI6WHI'
 MPESA_CONSUMER_SECRET = 'gMjyzZmxlktCIkqH3JNZoJG6r8bzclpTSAHR0Xdhd4V22QoUwlFWvQXGN4uKuyoR'
 MPESA_INITIATOR_NAME = 'testapi'
@@ -266,5 +280,4 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
 EMAIL_HOST_PASSWORD = 'yfzx npwn hony nkjs'  # Or app password
 
-# settings.py
 
