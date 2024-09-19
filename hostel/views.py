@@ -895,34 +895,58 @@ class FacilityDetailView(APIView):
 
         facility.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+     
+from rest_framework import serializers
+from .models import FacilityRegistration, Tenant, Facility
 
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework.response import Response
-from .models import FacilityRegistration
-from .serializers import FacilityRegistrationSerializer
+class FacilityRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FacilityRegistration
+        fields = ['facility', 'tenant', 'registration_token']
+        read_only_fields = ['registration_token']
 
 class FacilityRegistrationView(APIView):
-    permission_classes = [IsAuthenticated]  # Require authentication
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = FacilityRegistrationSerializer(data=request.data)
-        
+        tenant_data = request.data.get('tenant')
+        facility_id = request.data.get('facility')
+
+        if not tenant_data or not facility_id:
+            return Response({"detail": "Tenant name and facility ID are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch the tenant based on the name
+        try:
+            tenant = Tenant.objects.get(name=tenant_data['name'])
+        except Tenant.DoesNotExist:
+            return Response({"detail": "Tenant with this name does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch the facility
+        try:
+            facility = Facility.objects.get(id=facility_id)
+        except Facility.DoesNotExist:
+            return Response({"detail": "Facility with this ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if registration already exists
+        existing_registration = FacilityRegistration.objects.filter(facility=facility, tenant=tenant).first()
+
+        if existing_registration:
+            return Response({
+                "detail": "You are already registered for this facility.",
+                "registration_token": existing_registration.registration_token
+            }, status=status.HTTP_200_OK)
+
+        # Validate the serializer
+        serializer = FacilityRegistrationSerializer(data={'facility': facility.id, 'tenant': tenant.id})
+
         if serializer.is_valid():
             try:
-                registration = serializer.save()
-                return Response({
-                    "registration_token": registration.registration_token
-                }, status=status.HTTP_201_CREATED)
+                registration = serializer.save(tenant=tenant, facility=facility)
+                return Response({"registration_token": registration.registration_token}, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 # Payment views
     

@@ -120,17 +120,18 @@ from rest_framework import serializers
 from .models import FacilityRegistration, Tenant, Facility
 
 
-class FacilityRegistrationSerializer(serializers.ModelSerializer):
-    tenant = serializers.PrimaryKeyRelatedField(queryset=Tenant.objects.all())  # Use PrimaryKeyRelatedField
+from rest_framework import serializers
+from .models import FacilityRegistration, Tenant, Facility
 
+class FacilityRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = FacilityRegistration
         fields = ['facility', 'tenant', 'registration_token']
         read_only_fields = ['registration_token']
 
     def create(self, validated_data):
-        facility = validated_data.pop('facility')
-        tenant = validated_data.pop('tenant')
+        facility = validated_data.get('facility')
+        tenant = validated_data.get('tenant')
 
         # Check if a registration already exists for this facility and tenant
         existing_registration = FacilityRegistration.objects.filter(facility=facility, tenant=tenant).first()
