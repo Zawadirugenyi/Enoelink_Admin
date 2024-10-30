@@ -33,3 +33,21 @@ def update_room_status_on_booking_delete(sender, instance, **kwargs):
     ).exists():
         room.status = True  # Mark room as available
         room.save()
+
+
+        from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Maintenance, Notification
+
+@receiver(post_save, sender=Maintenance)
+def notify_tenant_on_maintenance_completion(sender, instance, **kwargs):
+    # Check if maintenance is completed
+    if instance.completed:
+        # Check if the maintenance is linked to a tenant through the room
+        tenant = instance.room.tenant  # Assuming `Room` has a ForeignKey to `Tenant`
+        if tenant:
+            # Create a notification for the tenant
+            Notification.objects.create(
+                tenant=tenant,
+                message=f"Maintenance for Room {instance.room.number} has been marked as completed."
+            )

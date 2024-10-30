@@ -5,11 +5,6 @@ from django.utils import timezone
 
 from django.db import models
 
-class Hostel(models.Model):
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
 
 
 class Hostel(models.Model):
@@ -53,7 +48,8 @@ class Tenant(models.Model):
     email = models.EmailField(unique=True)
     passport_photo = models.ImageField(upload_to="tenant_image/", null=True, blank=True)
     parent = models.CharField(max_length=20, default='Unknown')
-    position = models.CharField(max_length=255)
+    relationship = models.CharField(max_length=255)
+    guardian_contact = models.CharField(max_length=12)
 
     def __str__(self):
         return self.name
@@ -125,55 +121,59 @@ class Maintenance(models.Model):
 
     def __str__(self):
         return f'{self.get_type_display()} for Room {self.room.number} - {"Completed" if self.completed else "Pending"}'
-
-
 from django.db import models
 from django.utils.crypto import get_random_string
 
 class Facility(models.Model):
+    """Represents a facility associated with a hostel."""
+    
     REGISTER = 'register'
     CONTACT = 'contact'
-    
+
     INTERACTION_CHOICES = [
         (REGISTER, 'Register'),
         (CONTACT, 'Contact'),
     ]
-    
+
     hostel = models.ForeignKey('Hostel', on_delete=models.CASCADE, related_name="facilities")
     name = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to="facility_images/", null=True, blank=True)
-    contact_name = models.CharField(max_length=255, null=True, blank=True)  # Supplier name
-    contact_email = models.EmailField(max_length=255, null=True, blank=True)  # Contact email
-    contact_phone = models.CharField(max_length=20, null=True, blank=True)  # Contact phone number
+    contact_name = models.CharField(max_length=255, null=True, blank=True)  
+    contact_email = models.EmailField(max_length=255, null=True, blank=True)  
+    contact_phone = models.CharField(max_length=20, null=True, blank=True)  
     interaction_type = models.CharField(
         max_length=10,
         choices=INTERACTION_CHOICES,
-        default=CONTACT,  # Default to 'Contact' interaction
+        default=CONTACT,
     )
-    
+
     def __str__(self):
-        return f"{self.name} at {self.hostel.name}"
+        return f"{self.name} at {self.hostel.name if self.hostel else 'Unknown Hostel'}"
+
 
 class FacilityRegistration(models.Model):
     """Handles tenant registrations for a facility."""
-    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name="registrations")
+    
     tenant = models.ForeignKey('Tenant', on_delete=models.CASCADE)
-    registration_token = models.CharField(max_length=12, unique=True, blank=True)
+    facility = models.ForeignKey('Facility', on_delete=models.CASCADE)
+    registration_token = models.CharField(max_length=12, blank=True)
+
+    class Meta:
+        unique_together = (('tenant', 'facility'),)
 
     def generate_token(self):
+        """Generates a random registration token."""
         self.registration_token = get_random_string(12)
         self.save()
 
     def save(self, *args, **kwargs):
+        """Overrides the save method to ensure a registration token is generated if not present."""
         if not self.registration_token:
             self.generate_token()
-        super().save(*args, **kwargs)
+        super().save(*args, **kwargs) 
 
-
-
-
-
+        
 class Payment(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -274,7 +274,7 @@ class Event(models.Model):
 
         # Event and Tenant Details
         details = [
-            ["Tenant Name:", tenant_name],  # Use tenant_name directly
+           # Use tenant_name directly
             ["Event Title:", self.title],
             ["Date:", self.date.strftime("%A, %B %d, %Y")],
             ["Location:", self.location],

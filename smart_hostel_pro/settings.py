@@ -41,8 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'hostel', 
     'users',
-    'channels',
-    
+    'channels', 
+   
 
 ]
 

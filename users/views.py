@@ -48,12 +48,21 @@ class SignInUserView(APIView):
 
             try:
                 send_mail(
-                    'Welcome to SmartHostelPro!',
-                    f'Hi {first_name},\n\nThank you for signing up with Enjoy your stay!\n\nBest regards,\nZawadi Rugenyi',
-                    settings.EMAIL_HOST_USER,
-                    [email],
-                    fail_silently=False,
-                )
+                'Welcome to SmartHostelPro!',
+                f'Hi {first_name},\n\n'
+                'Thank you so much for signing up with SmartHostelPro! We are really happy to have you here. '
+                'We hope you enjoy your time with us and find everything you need to feel at home.\n\n'
+                'At SmartHostelPro, we work hard to ensure your stay is smooth and comfortable. '
+                'If you have any questions or need assistance, please don’t hesitate to reach out. '
+                'Our team is here to help you in any way we can.\n\n'
+                'We are excited to have you on board and hope you have a wonderful stay!\n\n'
+                'Best regards,\n'
+                'Zawadi Rugenyi',
+                settings.EMAIL_HOST_USER,
+                [email],
+                fail_silently=False,
+            )
+
             except BadHeaderError:
                 return Response({'status': False, 'message': 'Invalid header found in email.'}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
@@ -156,7 +165,7 @@ def check_user(request):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
+    return JsonResponse({'error': 'Password must be at least 8 characters long, include at least one letter, one number, and one special character.'}, status=400)
 
 from rest_framework.response import Response
 from rest_framework import status

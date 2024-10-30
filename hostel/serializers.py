@@ -96,18 +96,6 @@ class MaintenanceSerializer(serializers.ModelSerializer):
         maintenance = Maintenance.objects.create(room=room, **validated_data)
         return maintenance
 
-
-from rest_framework import serializers
-from .models import Facility, FacilityRegistration
-
-
-
-class FacilitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Facility
-        fields = ['id', 'name', 'description', 'image', 'contact_info', 'interaction_type']
-
-
 from rest_framework import serializers
 from .models import Facility, FacilityRegistration
 
@@ -115,13 +103,6 @@ class FacilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Facility
         fields = ['id', 'name', 'description', 'image', 'contact_name', 'contact_email', 'contact_phone', 'interaction_type']
-
-from rest_framework import serializers
-from .models import FacilityRegistration, Tenant, Facility
-
-
-from rest_framework import serializers
-from .models import FacilityRegistration, Tenant, Facility
 
 class FacilityRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -145,8 +126,6 @@ class FacilityRegistrationSerializer(serializers.ModelSerializer):
         )
         registration.generate_token()
         return registration
-
-
 
 
 

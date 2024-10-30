@@ -2,14 +2,17 @@ from django.urls import path
 from django.conf import settings
 from .views import RoomDescriptionDetailView
 from .views import generate_plot
+from .views import FacilityListCreateView, FacilityDetailView, RegisterFacilityView
 from .views import GenerateBypassCodeView, VerifyBypassCodeView
 from .views import check_email
+from .views import FacilityListCreateView, FacilityDetailView, RegisterFacilityView
+from .views import FacilityListCreateView, FacilityDetailView, RegisterFacilityView
 from .views import RVPDownloadCreateView
 from .views import FacilityListCreateView, FacilityDetailView
 from .views import lipa_na_mpesa, mpesa_callback
 from .views import AvailableRoomsList
 from .views import RoomAvailabilityCheckView
-from .views import FacilityListCreateView, FacilityDetailView, FacilityRegistrationView
+from .views import FacilityListCreateView, FacilityDetailView
 from django.conf.urls.static import static
 from django.urls import path
 from .views import EventListCreateView, EventDetailView
@@ -18,6 +21,7 @@ from .views import FacilityListCreateView, FacilityDetailView
 from . import views
 from .views import TenantListCreateView, TenantCheckView, TenantDetailView
 from .views import book_room
+from .views import dashboard_view
 from rest_framework.authtoken.views import obtain_auth_token
 from .views import RoomListCreateView, RoomDescriptionListCreateView, RoomDetailView, RoomDescriptionDetailView
 from .views import (
@@ -69,12 +73,10 @@ urlpatterns = [
     path('maintenance/<int:pk>/', MaintenanceDetailView.as_view(), name='maintenance-detail'),
    
 
-    path('facilities/', FacilityListCreateView.as_view(), name='facility-list-create'),
-    path('facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
 
     path('api/facilities/', FacilityListCreateView.as_view(), name='facility-list-create'),
     path('api/facilities/<int:pk>/', FacilityDetailView.as_view(), name='facility-detail'),
-    path('api/register_facility/', FacilityRegistrationView.as_view(), name='register_facility'),
+    path('api/register_facility/', RegisterFacilityView.as_view(), name='register_facility'),
 
 
     path('payments/', PaymentListCreateView.as_view(), name='payment-list-create'),
@@ -101,10 +103,13 @@ urlpatterns = [
     path('api/rvp-downloads/', RVPDownloadCreateView.as_view(), name='rvp_download_create'),
 
     path('plot/', generate_plot, name='generate_plot'),
-   
+
+    path('dashboard/', dashboard_view, name='dashboard'),  
+
     
  
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
