@@ -134,7 +134,6 @@ class Facility(models.Model):
         (REGISTER, 'Register'),
         (CONTACT, 'Contact'),
     ]
-
     hostel = models.ForeignKey('Hostel', on_delete=models.CASCADE, related_name="facilities")
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -150,8 +149,7 @@ class Facility(models.Model):
 
     def __str__(self):
         return f"{self.name} at {self.hostel.name if self.hostel else 'Unknown Hostel'}"
-
-
+    
 class FacilityRegistration(models.Model):
     """Handles tenant registrations for a facility."""
     
@@ -172,8 +170,7 @@ class FacilityRegistration(models.Model):
         if not self.registration_token:
             self.generate_token()
         super().save(*args, **kwargs) 
-
-        
+ 
 class Payment(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -196,8 +193,6 @@ class Notification(models.Model):
     @property
     def tenant_name(self):
         return self.tenant.name if self.tenant else "No tenant"
-
-
 
 class Request(models.Model):
     user = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='requests')
