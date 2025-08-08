@@ -48,11 +48,11 @@ class SignInUserView(APIView):
 
             try:
                 send_mail(
-                'Welcome to SmartHostelPro!',
+                'Welcome to EneoLink!',
                 f'Hi {first_name},\n\n'
-                'Thank you so much for signing up with SmartHostelPro! We are really happy to have you here. '
+                'Thank you so much for signing up with EneoLink! We are really happy to have you here. '
                 'We hope you enjoy your time with us and find everything you need to feel at home.\n\n'
-                'At SmartHostelPro, we work hard to ensure your stay is smooth and comfortable. '
+                'At EneoLink, we work hard to ensure your stay is smooth and comfortable. '
                 'If you have any questions or need assistance, please don’t hesitate to reach out. '
                 'Our team is here to help you in any way we can.\n\n'
                 'We are excited to have you on board and hope you have a wonderful stay!\n\n'
@@ -199,7 +199,7 @@ class SendBypassCodeView(APIView):
         try:
             send_mail(
                 'Your Bypass Code',
-                f'Hello {user.first_name},\n\nYour bypass code is: {bypass_code}\n\nBest regards,\nSmartHostelPro Team',
+                f'Hello {user.first_name},\n\nYour bypass code is: {bypass_code}\n\nBest regards,\nEneoLink Team',
                 settings.EMAIL_HOST_USER,
                 [email],
                 fail_silently=False,

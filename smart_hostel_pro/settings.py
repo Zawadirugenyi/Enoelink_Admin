@@ -214,14 +214,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Smart Hostel Pro Admin",
+    "site_title": "EneoLink Admin",
     "site_header": "Smart Hostel Pro",
-    "site_brand": "Smart Hostel Pro",
-    "site_logo": "img/logoo.png",  
-    "site_logo_classes": "img/logoo.png",  
+    "site_brand": "EneoLink",
+    "site_logo": "img/logo.png",  
+    "site_logo_classes": "img/logo.png",  
     "site_icon": None,
-    "welcome_sign": "Welcome to Smart Hostel Pro",
-    "copyright": "Smart Hostel Pro",
+    "welcome_sign": "Welcome to EneoLink",
+    "copyright": "EneoLink",
     "language_chooser": True,
 }
 
