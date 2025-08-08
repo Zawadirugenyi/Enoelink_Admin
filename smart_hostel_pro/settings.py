@@ -22,7 +22,11 @@ SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "enoelink-admin-xbbe.onrender.com", 
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -42,8 +46,6 @@ INSTALLED_APPS = [
     'hostel', 
     'users',
     'channels', 
-   
-
 ]
 
 ASGI_APPLICATION = 'your_project_name.asgi.application'
