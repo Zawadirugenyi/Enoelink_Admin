@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'channels', 
 ]
 
-ASGI_APPLICATION = 'your_project_name.asgi.application'
+ASGI_APPLICATION = 'smart-hostel-pro.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
