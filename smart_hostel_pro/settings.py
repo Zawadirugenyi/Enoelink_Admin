@@ -140,7 +140,7 @@ TEMPLATES = [
 ]
 WSGI_APPLICATION = 'smart_hostel_pro.wsgi.application'
 
-ASGI_APPLICATION = 'your_project_name.asgi.application'
+ASGI_APPLICATION = 'smart_hostel_pro.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
