@@ -20,22 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "enoelink-admin-xbbe.onrender.com", 
-]
+ALLOWED_HOSTS = ['enoelink-admin-xbbe.onrender.com']
 
-CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = ['https://enoelink-admin-xbbe.onrender.com']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://enoelink-admin-xbbe.onrender.com'
-]
-
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+DEBUG = False
 # Application definition
 INSTALLED_APPS = [
 
