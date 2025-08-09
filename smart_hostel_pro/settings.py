@@ -25,7 +25,8 @@ ALLOWED_HOSTS = ['enoelink-admin-xbbe.onrender.com']
 
 CSRF_TRUSTED_ORIGINS = ['https://enoelink-admin-xbbe.onrender.com']
 
-DEBUG = False
+DEBUG = True
+
 # Application definition
 INSTALLED_APPS = [
 
