@@ -71,6 +71,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'enoelink-admin-xbbe.onrender.com,
 ]
 
 CORS_ALLOW_HEADERS = [
