@@ -21,11 +21,16 @@ SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['enoelink-admin-xbbe.onrender.com']
+ALLOWED_HOSTS = ['enoelink-admin-xbbe.onrender.com', 'localhost', '127.0.0.1']
+
 
 CSRF_TRUSTED_ORIGINS = ['https://enoelink-admin-xbbe.onrender.com']
 
 DEBUG = True
+DEBUG = True
+
+ASGI_APPLICATION = 'smart_hostel_pro.asgi.application'
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -71,7 +76,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'enoelink-admin-xbbe.onrender.com,
+    'enoelink-admin-xbbe.onrender.com',   # <-- Add missing closing quote here
 ]
 
 CORS_ALLOW_HEADERS = [
