@@ -10,6 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
+import matplotlib
+
+matplotlib.use("Agg")  
+matplotlib.set_configdir(os.path.join(os.path.dirname(__file__), "matplotlib_cache"))
 
 from pathlib import Path
 import os
