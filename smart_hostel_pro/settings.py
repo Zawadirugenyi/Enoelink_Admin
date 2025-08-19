@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+# import matplotlib # This import might not be necessary if you are not using matplotlib directly in settings.py
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,20 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
-
+DEBUG = True
 
 ALLOWED_HOSTS = [
- 'enoelink-admin.onrender.com',  # add this
+    'enoelink-admin.onrender.com', # add this
     'localhost',
     '127.0.0.1',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
- 'https://enoelink-admin.onrender.com',  # add this too
+    'https://enoelink-admin.onrender.com', # add this too
 ]
-
-DEBUG = True
 
 ASGI_APPLICATION = 'smart_hostel_pro.asgi.application'
 
@@ -50,9 +48,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'hostel', 
+    'hostel',
     'users',
-    'channels', 
+    'channels',
 ]
 
 CHANNEL_LAYERS = {
@@ -65,7 +63,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -76,7 +74,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://enoelink-admin.onrender.com', 
+    'https://enoelink-admin.onrender.com',
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -93,7 +91,7 @@ CACHES = {
 
 ROOT_URLCONF = 'smart_hostel_pro.urls'
 
-AUTH_USER_MODEL = "users.User" 
+AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -169,8 +167,8 @@ USE_L10N = True
 USE_TZ = True
 
 # settings.py
-DEBUG = True
-
+# The duplicate DEBUG = True line is not necessary and can be removed.
+# DEBUG = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -195,8 +193,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# The MEDIA_URL and MEDIA_ROOT lines are duplicated. I'll comment out the duplicates.
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 
 
 JAZZMIN_SETTINGS = {
