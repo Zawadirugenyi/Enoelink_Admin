@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+
 from pathlib import Path
 import os
 
@@ -20,15 +21,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+
+
+ALLOWED_HOSTS = [
+ 'enoelink-admin.onrender.com',  # add this
+    'localhost',
+    '127.0.0.1',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+ 'https://enoelink-admin.onrender.com',  # add this too
+]
+
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-CORS_ALLOW_ALL_ORIGINS = True
+ASGI_APPLICATION = 'smart_hostel_pro.asgi.application'
 
 # Application definition
 INSTALLED_APPS = [
-
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,19 +53,13 @@ INSTALLED_APPS = [
     'hostel', 
     'users',
     'channels', 
-   
-
 ]
-
-ASGI_APPLICATION = 'your_project_name.asgi.application'
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -69,9 +74,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
-
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'https://enoelink-admin.onrender.com', 
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -79,7 +84,6 @@ CORS_ALLOW_HEADERS = [
     'content-type',
 ]
 
-# settings.py
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -91,8 +95,6 @@ ROOT_URLCONF = 'smart_hostel_pro.urls'
 
 AUTH_USER_MODEL = "users.User" 
 
-
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
          'rest_framework.authentication.TokenAuthentication',
@@ -100,12 +102,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-        
     ],
 }
-
-# settings.py
-AUTH_USER_MODEL = 'users.User'
 
 LOGGING = {
     'version': 1,
@@ -120,8 +118,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
-
-
 
 TEMPLATES = [
     {
@@ -138,18 +134,9 @@ TEMPLATES = [
         },
     },
 ]
+
 WSGI_APPLICATION = 'smart_hostel_pro.wsgi.application'
 
-ASGI_APPLICATION = 'your_project_name.asgi.application'
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
-}
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -157,8 +144,6 @@ DATABASES = {
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -173,6 +158,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
