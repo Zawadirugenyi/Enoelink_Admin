@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from .views import RoomDescriptionDetailView
-from .views import generate_plot
+
 from .views import FacilityListCreateView, FacilityDetailView, RegisterFacilityView
 from .views import GenerateBypassCodeView, VerifyBypassCodeView
 from .views import check_email
