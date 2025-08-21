@@ -25,13 +25,13 @@ SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if
 
 
 ALLOWED_HOSTS = [
- 'enoelink-admin.onrender.com',  # add this
+ 'https://enoelink-ad.onrender.com',  # add this
     'localhost',
     '127.0.0.1',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
- 'https://enoelink-admin.onrender.com',  # add this too
+ 'https://enoelink-ad.onrender.com',  # add this too
 ]
 
 DEBUG = True
@@ -76,7 +76,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://enoelink-admin.onrender.com', 
+    'https://enoelink-ad.onrender.com', 
 ]
 
 CORS_ALLOW_HEADERS = [
