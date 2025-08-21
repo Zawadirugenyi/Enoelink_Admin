@@ -167,6 +167,7 @@ def create_default_rvp(self, tenant_name):
         doc.build(content)
         buffer.seek(0)
 
+
         # Create a unique filename for the PDF, using tenant_name directly
         file_name = f"{self.title.replace(' ', '_')}_{tenant_name.replace(' ', '_')}_{random.randint(1000, 9999)}.pdf"
         return ContentFile(buffer.read(), file_name)
