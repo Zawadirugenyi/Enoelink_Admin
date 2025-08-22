@@ -6,31 +6,27 @@ from django.urls import path, include
 
 urlpatterns = [
     path('users/', include('users.urls')),
-    path('api/', include('hostel.urls')), 
+    path('api/', include('hostel.urls')),
 
-
- # Adjust this to the correct app name
-    path('', include('hostel.urls')),  # Include the app that has the lipa_na_mpesa view
-
-
-
+    # Root URL points to your hostel app (adjust if needed)
+    path('', include('hostel.urls')),  
 ]
+
+# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Include admin URLs within the i18n_patterns
+# Admin URLs with optional language prefix
 if 'django.middleware.locale.LocaleMiddleware' in settings.MIDDLEWARE:
     urlpatterns += i18n_patterns(
         path('admin/', admin.site.urls),
-        # other paths if needed
     )
 else:
     urlpatterns += [
         path('admin/', admin.site.urls),
     ]
 
+# Language switching endpoint
 urlpatterns += [
     path('set_language/', include('django.conf.urls.i18n')),
 ]
-
-
