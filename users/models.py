@@ -3,10 +3,10 @@ from django.db import models
 
 class UsersManager(BaseUserManager):
 
-    def create_user(self, first_name, last_name, email, phone_number, password):
-        '''
-        Manages the creation on student instances
-        '''
+    def create_user(self, first_name, last_name, email, phone_number, password=None):
+        """
+        Creates and saves a regular User with the given details.
+        """
         if not first_name:
             raise ValueError("First name must be included")
         if not last_name:
@@ -15,36 +15,39 @@ class UsersManager(BaseUserManager):
             raise ValueError("Please add email address")
         if not phone_number:
             raise ValueError("Please add a phone number")
-        if not password:
-            raise ValueError("User must have a password")
 
+        email = self.normalize_email(email)
         user = self.model(
             first_name=first_name,
             last_name=last_name,
-            email=self.normalize_email(email),
+            email=email,
             phone_number=phone_number,
         )
-        user.set_password(password)
+        if password:
+            user.set_password(password)
+        else:
+            raise ValueError("User must have a password")
+        
         user.save(using=self._db)
         return user
 
     def create_superuser(self, first_name, last_name, email, phone_number, password):
-        '''
-        Manages the creation of superuser 
-        '''
+        """
+        Creates and saves a superuser with the given details.
+        """
         user = self.create_user(
             first_name=first_name,
             last_name=last_name,
-            email=self.normalize_email(email=email),
+            email=email,
             phone_number=phone_number,
-            password=password,
+            password=password
         )
         user.is_admin = True
-        user.is_staff = True
-        user.is_superuser = True
+        user.is_staff = True      # Must be True for admin login
+        user.is_superuser = True  # Must be True for admin login
         user.save(using=self._db)
-
         return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50, null=False)
@@ -68,8 +71,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    # These two methods are required for admin access
     def has_perm(self, perm, obj=None):
-        return True
+        return self.is_admin  # Only admin users have permissions
     
     def has_module_perms(self, app_label):
-        return True
+        return self.is_admin
