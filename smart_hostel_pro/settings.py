@@ -25,10 +25,9 @@ SECRET_KEY = 'django-insecure-w0v4^hh-@s_xxbxfz@t(9ed(=cpfi3+t_ri8rp($3e9s8&t1if
 
 
 ALLOWED_HOSTS = [
-    "enoelinkadmin-production.up.railway.app",
-    "enoelink-admin.onrender.com",  # if this one is still used
-    "localhost",
-    "127.0.0.1",
+ 'enoelinkadmin-production.up.railway.app',
+    'localhost',
+    '127.0.0.1',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
