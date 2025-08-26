@@ -267,5 +267,3 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
 EMAIL_HOST_PASSWORD = 'yfzx npwn hony nkjs'  # Or app password
-
-
