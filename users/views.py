@@ -56,7 +56,6 @@ class SignInUserView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
----
 
 class LoginUserView(APIView):
     permission_classes = (AllowAny,)
@@ -94,7 +93,6 @@ class LoginUserView(APIView):
 
         return Response(response_content, status=status.HTTP_400_BAD_REQUEST)
 
----
 
 class LogoutUserView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -116,7 +114,6 @@ class LogoutUserView(APIView):
 
         return Response(response_content, status=status.HTTP_200_OK)
 
----
 
 @csrf_exempt
 def check_user(request):
@@ -133,7 +130,6 @@ def check_user(request):
 
     return JsonResponse({'error': 'Password must be at least 8 characters long, include at least one letter, one number, and one special character.'}, status=400)
 
----
 
 class SendBypassCodeView(APIView):
     permission_classes = (AllowAny,)
