@@ -261,12 +261,12 @@ MPESA_BUSINESS_SHORTCODE = '174379'
 MPESA_PASSKEY = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919'
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
-EMAIL_HOST_PASSWORD = 'jwyx swvq ntih hiuq'  # 16-character app password from Google
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 'smtp.gmail.com'
+#EMAIL_PORT = 587
+#EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = False
+#EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
+#EMAIL_HOST_PASSWORD = 'jwyx swvq ntih hiuq'  # 16-character app password from Google
+#DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Or app password
