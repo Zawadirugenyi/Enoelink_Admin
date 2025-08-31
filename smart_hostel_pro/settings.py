@@ -266,4 +266,4 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'zawadirugenyi@gmail.com'
-EMAIL_HOST_PASSWORD = 'yfzx npwn hony nkjs'  # Or app password
+EMAIL_HOST_PASSWORD = 'jwyx swvq ntih hiuq'  # Or app password
