@@ -75,8 +75,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'https://eneolink.vercel.app',
-    'https://enoelinkadmin-production.up.railway.app', 
+    'https://eneolink.vercel.app',  # Add a trailing slash for good measure
+    'https://enoelinkadmin-production.up.railway.app',
 ]
 
 CORS_ALLOW_HEADERS = [
