@@ -35,6 +35,7 @@ class SignInUserView(APIView):
             phone_number = serializer.validated_data['phone_number']
             password = serializer.validated_data['password']
 
+            # Create user
             user = User.objects.create(
                 first_name=first_name,
                 last_name=last_name,
@@ -44,43 +45,37 @@ class SignInUserView(APIView):
             user.set_password(password)
             user.save()
 
+            # Create token
             token, created = Token.objects.get_or_create(user=user)
 
+            # Try to send welcome email, but don't block signup
             try:
                 send_mail(
-                'Welcome to EneoLink!',
-                f'Hi {first_name},\n\n'
-                'Thank you so much for signing up with EneoLink! We are really happy to have you here. '
-                'We hope you enjoy your time with us and find everything you need to feel at home.\n\n'
-                'At EneoLink, we work hard to ensure your stay is smooth and comfortable. '
-                'If you have any questions or need assistance, please don’t hesitate to reach out. '
-                'Our team is here to help you in any way we can.\n\n'
-                'We are excited to have you on board and hope you have a wonderful stay!\n\n'
-                'Best regards,\n'
-                'Zawadi Rugenyi',
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently=False,
-            )
-
-            except BadHeaderError:
-                return Response({'status': False, 'message': 'Invalid header found in email.'}, status=status.HTTP_400_BAD_REQUEST)
+                    'Welcome to EneoLink!',
+                    f'Hi {first_name},\n\n'
+                    'Thank you for signing up with EneoLink! We are happy to have you here.\n\n'
+                    'Best regards,\nEneoLink Team',
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently=False,
+                )
             except Exception as e:
-                print(f"Error sending email: {e}")
-                return Response({'status': False, 'message': 'Failed to send welcome email.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                print(f"Warning: Failed to send welcome email to {email}: {e}")
+                # Do not return; signup succeeds even if email fails
 
+            # Always return success
             response_content = {
                 'status': True,
-                'message': 'User registered successfully.',
+                'message': 'User registered successfully!',
                 'token': token.key,
             }
             return Response(response_content, status=status.HTTP_201_CREATED)
 
-        response_content = {
+        # Invalid serializer
+        return Response({
             'status': False,
             'message': serializer.errors,
-        }
-        return Response(response_content, status=status.HTTP_400_BAD_REQUEST)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
