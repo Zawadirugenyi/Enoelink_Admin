@@ -546,402 +546,210 @@ class StaffDetailView(APIView):
       
 
 class BookingListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
 
-    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Booking.objects.all()
 
-    serializer_class = BookingSerializer
-
-
-
-    def get_queryset(self):
-
-        return Booking.objects.all()
-
-
-
-    def post(self, request, *args, **kwargs):
-
-        serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-
-            try:
-
-                serializer.save()
-
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            except Exception as e:
-
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    
-
-
-
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
 from django.http import JsonResponse
-
 from django.shortcuts import get_object_or_404
-
 from rest_framework.views import APIView
-
 from rest_framework.permissions import IsAuthenticated
-
 from .models import Room, Booking
 
-
-
 class RoomAvailabilityCheckView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    permission_classes = [IsAuthenticated]
-
-
-
-    def get(self, request, room_number, hostel_id):
-
-        room = get_object_or_404(Room, number=room_number, hostel_id=hostel_id)
-
-        is_booked = Booking.objects.filter(room=room).exists()
-
-        return JsonResponse({'is_booked': is_booked})
-
-
-
+    def get(self, request, room_number, hostel_id):
+        room = get_object_or_404(Room, number=room_number, hostel_id=hostel_id)
+        is_booked = Booking.objects.filter(room=room).exists()
+        return JsonResponse({'is_booked': is_booked})
 
 
 @api_view(['POST'])
-
 @permission_classes([IsAuthenticated])
-
 def create_booking(request):
+    data = request.data
+    room_id = data.get('room')
+    tenant_id = data.get('tenant')
+    check_in_date = data.get('check_in_date')
+    check_out_date = data.get('check_out_date')
 
-    data = request.data
+    try:
+        room = Room.objects.get(id=room_id)
+        if room.is_booked:
+            return Response({'detail': 'This room is already booked.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        booking = Booking.objects.create(
+            room=room,
+            tenant_id=tenant_id,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
+        
+        room.is_booked = True
+        room.save()
 
-    room_id = data.get('room')
-
-    tenant_id = data.get('tenant')
-
-    check_in_date = data.get('check_in_date')
-
-    check_out_date = data.get('check_out_date')
-
-
-
-    try:
-
-        room = Room.objects.get(id=room_id)
-
-        if room.is_booked:
-
-            return Response({'detail': 'This room is already booked.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        
-
-        booking = Booking.objects.create(
-
-            room=room,
-
-            tenant_id=tenant_id,
-
-            check_in_date=check_in_date,
-
-            check_out_date=check_out_date
-
-        )
-
-        
-
-        room.is_booked = True
-
-        room.save()
-
-
-
-        serializer = BookingSerializer(booking)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    except Room.DoesNotExist:
-
-        return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-    except Exception as e:
-
-        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    
-
-    
-
-
-
-
+        serializer = BookingSerializer(booking)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Room.DoesNotExist:
+        return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 
 
 
 class AvailableRoomsList(generics.ListAPIView):
+    serializer_class = RoomSerializer
 
-    serializer_class = RoomSerializer
+    def get_queryset(self):
+        check_in_date = self.request.query_params.get('check_in_date')
+        check_out_date = self.request.query_params.get('check_out_date')
 
+        if check_in_date and check_out_date:
+            # Convert to date objects
+            check_in_date = timezone.datetime.strptime(check_in_date, "%Y-%m-%d").date()
+            check_out_date = timezone.datetime.strptime(check_out_date, "%Y-%m-%d").date()
 
+            # Get booked room IDs
+            booked_rooms = Booking.objects.filter(
+                check_in_date__lt=check_out_date,
+                check_out_date__gt=check_in_date
+            ).values_list('room_id', flat=True)
 
-    def get_queryset(self):
-
-        check_in_date = self.request.query_params.get('check_in_date')
-
-        check_out_date = self.request.query_params.get('check_out_date')
-
-
-
-        if check_in_date and check_out_date:
-
-            # Convert to date objects
-
-            check_in_date = timezone.datetime.strptime(check_in_date, "%Y-%m-%d").date()
-
-            check_out_date = timezone.datetime.strptime(check_out_date, "%Y-%m-%d").date()
-
-
-
-            # Get booked room IDs
-
-            booked_rooms = Booking.objects.filter(
-
-                check_in_date__lt=check_out_date,
-
-                check_out_date__gt=check_in_date
-
-            ).values_list('room_id', flat=True)
-
-
-
-            # Exclude booked rooms from available rooms
-
-            return Room.objects.exclude(id__in=booked_rooms).exclude(is_booked=True)
-
-        else:
-
-            return Room.objects.exclude(is_booked=True)
-
-
+            # Exclude booked rooms from available rooms
+            return Room.objects.exclude(id__in=booked_rooms).exclude(is_booked=True)
+        else:
+            return Room.objects.exclude(is_booked=True)
 
 def create_booking(room_id, tenant_id, check_in_date, check_out_date):
-
-    room = Room.objects.get(id=room_id)
-
-    if not room.is_booked:
-
-        Booking.objects.create(
-
-            room=room,
-
-            tenant_id=tenant_id,
-
-            check_in_date=check_in_date,
-
-            check_out_date=check_out_date
-
-        )
-
-        room.is_booked = True
-
-        room.save()
-
-    else:
-
-        raise ValueError("Room is already booked")
-
-
-
+    room = Room.objects.get(id=room_id)
+    if not room.is_booked:
+        Booking.objects.create(
+            room=room,
+            tenant_id=tenant_id,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
+        room.is_booked = True
+        room.save()
+    else:
+        raise ValueError("Room is already booked")
 
 
 def book_room(request):
+    if request.method == 'POST':
+        room_id = request.POST.get('room_id')
+        tenant_id = request.POST.get('tenant_id')
+        check_in_date = request.POST.get('check_in_date')
+        check_out_date = request.POST.get('check_out_date')
 
-    if request.method == 'POST':
+        room = get_object_or_404(Room, id=room_id)
+        tenant = get_object_or_404(Tenant, id=tenant_id)
 
-        room_id = request.POST.get('room_id')
+        booking = Booking.objects.create(
+            room=room,
+            tenant=tenant,
+            check_in_date=check_in_date,
+            check_out_date=check_out_date
+        )
 
-        tenant_id = request.POST.get('tenant_id')
+        room.is_booked = True
+        room.save()
 
-        check_in_date = request.POST.get('check_in_date')
-
-        check_out_date = request.POST.get('check_out_date')
-
-
-
-        room = get_object_or_404(Room, id=room_id)
-
-        tenant = get_object_or_404(Tenant, id=tenant_id)
-
-
-
-        booking = Booking.objects.create(
-
-            room=room,
-
-            tenant=tenant,
-
-            check_in_date=check_in_date,
-
-            check_out_date=check_out_date
-
-        )
-
-
-
-        room.is_booked = True
-
-        room.save()
-
-
-
-        return JsonResponse({'status': 'success'})
-
-    return JsonResponse({'status': 'error'})
-
-
-
-
-
-
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})
 
 
 
 
 
 def available_rooms(request):
+    available_rooms = Room.objects.filter(is_booked=False)
 
-    available_rooms = Room.objects.filter(is_booked=False)
-
-
-
-    hostel_name = request.GET.get('hostel__name', '')
-
-    rooms = Room.objects.filter(hostel__name=hostel_name)
-
-    room_data = list(rooms.values('id', 'number', 'room_type', 'image'))
-
-    return JsonResponse(room_data, safe=False)
-
-
-
+    hostel_name = request.GET.get('hostel__name', '')
+    rooms = Room.objects.filter(hostel__name=hostel_name)
+    room_data = list(rooms.values('id', 'number', 'room_type', 'image'))
+    return JsonResponse(room_data, safe=False)
 
 
 class AvailableRoomsListView(generics.ListAPIView):
+    serializer_class = RoomSerializer
 
-    serializer_class = RoomSerializer
-
-
-
-    def get_queryset(self):
-
-        hostel_name = self.request.query_params.get('hostel__name')
-
-        if hostel_name:
-
-            return Room.objects.filter(hostel__name=hostel_name, is_available=True)
-
-        return Room.objects.filter(is_available=True)
-
-
-
+    def get_queryset(self):
+        hostel_name = self.request.query_params.get('hostel__name')
+        if hostel_name:
+            return Room.objects.filter(hostel__name=hostel_name, is_available=True)
+        return Room.objects.filter(is_available=True)
 
 
 class BookingDetailView(APIView):
+   
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookingSerializer
 
-   
+    def get_object(self, pk):
+        try:
+            return Booking.objects.get(pk=pk)
+        except Booking.DoesNotExist:
+            return None
 
-    permission_classes = [IsAuthenticated]
+    def get(self, request, pk):
+        booking = self.get_object(pk)
+        if booking is None:
+            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(booking)
+        return Response(serializer.data)
 
-    serializer_class = BookingSerializer
-
-
-
-    def get_object(self, pk):
-
-        try:
-
-            return Booking.objects.get(pk=pk)
-
-        except Booking.DoesNotExist:
-
-            return None
-
-
-
-    def get(self, request, pk):
-
-        booking = self.get_object(pk)
-
-        if booking is None:
-
-            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.serializer_class(booking)
-
-        return Response(serializer.data)
-
-
-
-    def put(self, request, pk):
-
-        booking = self.get_object(pk)
-
-        if booking is None:
-
-            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.serializer_class(booking, data=request.data)
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+    def put(self, request, pk):
+        booking = self.get_object(pk)
+        if booking is None:
+            return Response({'error': 'Booking not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(booking, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def delete_booking(request, booking_id):
+    try:
+        booking = Booking.objects.get(id=booking_id)
+        room = booking.room
+        booking.delete()
 
-    try:
+        # Update room status
+        if not Booking.objects.filter(
+            room=room,
+            check_out_date__gt=timezone.now()
+        ).exists():
+            room.status = True
+            room.save()
 
-        booking = Booking.objects.get(id=booking_id)
+        return JsonResponse({'message': 'Booking deleted and room status updated.'})
+    except Booking.DoesNotExist:
+        return JsonResponse({'error': 'Booking not found.'}, status=404)
 
-        room = booking.room
-
-        booking.delete()
-
-
-
-        # Update room status
-
-        if not Booking.objects.filter(
-
-            room=room,
-
-            check_out_date__gt=timezone.now()
-
-        ).exists():
-
-            room.status = True
-
-            room.save()
+    
 
 
 
-        return JsonResponse({'message': 'Booking deleted and room status updated.'})
 
-    except Booking.DoesNotExist:
-
-        return JsonResponse({'error': 'Booking not found.'}, status=404)
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
